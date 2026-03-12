@@ -17,6 +17,10 @@ export async function GET(request) {
 
   const data = await response.json()
 
+  if (!data.athlete) {
+    return new Response(`Erreur Strava: ${JSON.stringify(data)}`, { status: 500 })
+  }
+
   await supabase.from('strava_tokens').upsert({
     athlete_id: data.athlete.id,
     access_token: data.access_token,
@@ -24,5 +28,5 @@ export async function GET(request) {
     expires_at: data.expires_at,
   })
 
-  return Response.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard`)
+  return Response.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/api/strava/import`)
 }
