@@ -4,6 +4,8 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
 
+  console.log('Code reçu:', code)
+
   const response = await fetch('https://www.strava.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -16,6 +18,7 @@ export async function GET(request) {
   })
 
   const data = await response.json()
+  console.log('Réponse Strava:', JSON.stringify(data))
 
   if (!data.athlete) {
     return new Response(`Erreur Strava: ${JSON.stringify(data)}`, { status: 500 })
