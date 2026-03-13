@@ -1,4 +1,9 @@
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY
+)
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
@@ -26,11 +31,12 @@ export async function GET(request) {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
     expires_at: data.expires_at,
-  })
+  }, { onConflict: 'athlete_id' })
 
   if (error) {
     return new Response(`Erreur Supabase: ${JSON.stringify(error)}`, { status: 500 })
   }
 
-  return Response.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/api/strava/import`)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  return Response.redirect(`${appUrl}/api/strava/import`)
 }

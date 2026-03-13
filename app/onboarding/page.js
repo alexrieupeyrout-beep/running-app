@@ -756,18 +756,21 @@ export default function Onboarding() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 opacity-50 pointer-events-none select-none">
-                <div className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm">
+              <div className="flex flex-col gap-3">
+                <a
+                  href="/api/auth/strava"
+                  className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm hover:border-[#FC4C02]/50 hover:shadow-md transition-all group"
+                >
                   <div className="w-11 h-11 rounded-xl bg-[#FC4C02] flex items-center justify-center flex-shrink-0">
                     <StravaIcon />
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-[#282830]">Strava</div>
+                    <div className="text-sm font-semibold text-[#282830]">Connecter Strava</div>
                     <div className="text-xs text-[#656779] mt-0.5">Sync automatique de tes activités</div>
                   </div>
-                  <span className="text-xs font-semibold bg-[#f5f8ee] text-[#9ea0ae] border border-[#dde5cb] px-2.5 py-1 rounded-full">Bientôt</span>
-                </div>
-                <div className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm">
+                  <span className="text-[#c4c7d6] group-hover:text-[#FC4C02] transition-colors text-lg">→</span>
+                </a>
+                <div className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm opacity-50 pointer-events-none select-none">
                   <div className="w-11 h-11 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ea0ae" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                   </div>
@@ -778,6 +781,7 @@ export default function Onboarding() {
                   <span className="text-xs font-semibold bg-[#f5f8ee] text-[#9ea0ae] border border-[#dde5cb] px-2.5 py-1 rounded-full">Bientôt</span>
                 </div>
               </div>
+
             </div>
           )}
 
