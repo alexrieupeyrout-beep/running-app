@@ -255,7 +255,18 @@ export default function Onboarding() {
   const isResume = step === STEPS.length
 
   // Plan calculated outputs for resume
-  const planWeeks = weeksUntilRace !== null ? Math.min(weeksUntilRace, 16) : 12
+  const PLAN_DURATIONS_FE = {
+    '5K':      { debutant: [4, 6, 8],  intermediaire: [6, 7, 8],  avance: [4, 5, 6]  },
+    '10K':     { debutant: [6, 8, 10], intermediaire: [8, 9, 10], avance: [6, 7, 8]  },
+    'Semi':    { debutant: [10, 12, 14], intermediaire: [10, 11, 12], avance: [8, 9, 10] },
+    'Marathon':{ debutant: [16, 18, 20], intermediaire: [16, 17, 18], avance: [12, 14, 16] },
+  }
+  const expLevel = !data.experience || data.experience === '< 1 an' ? 'debutant'
+    : data.experience === '> 5 ans' ? 'avance' : 'intermediaire'
+  const durRange = (PLAN_DURATIONS_FE[data.distance] || PLAN_DURATIONS_FE['10K'])[expLevel]
+  const planWeeks = weeksUntilRace !== null
+    ? Math.min(Math.max(weeksUntilRace, durRange[0]), durRange[2])
+    : durRange[1]
   const planStart = new Date()
   const planEnd = data.raceDate ? new Date(data.raceDate) : null
   const baseKmWeek = parseFloat(data.kmPerWeekCustom) || (

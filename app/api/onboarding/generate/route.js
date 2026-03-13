@@ -5,12 +5,36 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY
 )
 
+// Durées recommandées par distance × niveau (min / défaut / max en semaines)
+const PLAN_DURATIONS = {
+  '5K':      { debutant: [4, 6, 8],  intermediaire: [6, 7, 8],  avance: [4, 5, 6]  },
+  '10K':     { debutant: [6, 8, 10], intermediaire: [8, 9, 10], avance: [6, 7, 8]  },
+  'Semi':    { debutant: [10, 12, 14], intermediaire: [10, 11, 12], avance: [8, 9, 10] },
+  'Marathon':{ debutant: [16, 18, 20], intermediaire: [16, 17, 18], avance: [12, 14, 16] },
+}
+
+function getExperienceLevel(experience) {
+  if (!experience || experience === '< 1 an') return 'debutant'
+  if (experience === '> 5 ans') return 'avance'
+  return 'intermediaire'
+}
+
+function getPlanWeeks(data) {
+  const dist = data.distance
+  const level = getExperienceLevel(data.experience)
+  const durations = PLAN_DURATIONS[dist] || PLAN_DURATIONS['10K']
+  const [min, def, max] = durations[level]
+
+  if (data.raceDate) {
+    const weeksUntilRace = Math.floor((new Date(data.raceDate) - new Date()) / (1000 * 60 * 60 * 24 * 7))
+    return Math.min(Math.max(weeksUntilRace, min), max)
+  }
+  return def
+}
+
 // Génère un plan algorithmique sans appel API
 function generatePlan(data) {
-  const weeksUntilRace = data.raceDate
-    ? Math.floor((new Date(data.raceDate) - new Date()) / (1000 * 60 * 60 * 24 * 7))
-    : 12
-  const totalWeeks = Math.min(Math.max(weeksUntilRace, 4), 16)
+  const totalWeeks = getPlanWeeks(data)
   const sessions = data.sessionsPerWeek || 3
   const days = data.preferredDays || ['Mardi', 'Jeudi', 'Samedi']
 
