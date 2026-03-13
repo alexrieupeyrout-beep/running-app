@@ -26,12 +26,22 @@ export async function GET(request) {
     return new Response(`Erreur Strava: ${JSON.stringify(data)}`, { status: 500 })
   }
 
-  const { error } = await supabase.from('strava_tokens').upsert({
-    athlete_id: data.athlete.id,
+  const athleteId = data.athlete.id
+  const tokenData = {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
     expires_at: data.expires_at,
-  }, { onConflict: 'athlete_id' })
+  }
+
+  const { data: existing } = await supabase
+    .from('strava_tokens')
+    .select('athlete_id')
+    .eq('athlete_id', athleteId)
+    .single()
+
+  const { error } = existing
+    ? await supabase.from('strava_tokens').update(tokenData).eq('athlete_id', athleteId)
+    : await supabase.from('strava_tokens').insert({ athlete_id: athleteId, ...tokenData })
 
   if (error) {
     return new Response(`Erreur Supabase: ${JSON.stringify(error)}`, { status: 500 })
