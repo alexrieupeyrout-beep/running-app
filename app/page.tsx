@@ -1,65 +1,93 @@
+import Link from "next/link";
 import Image from "next/image";
+import { Crosshair, Activity, RefreshCw, ArrowRight } from "lucide-react";
+
+const features = [
+  {
+    icon: Crosshair,
+    title: "Plan personnalisé",
+    desc: "Généré par IA selon ton niveau, ta course cible et tes disponibilités.",
+  },
+  {
+    icon: Activity,
+    title: "Suivi en temps réel",
+    desc: "Tes séances sont automatiquement validées dès que tu cours.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Plan adaptatif",
+    desc: "Le plan se recalibre selon tes performances et séances réalisées.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-[#f5f8ee] font-sans">
+      {/* Nav */}
+      <nav className="bg-white border-b border-[#dde5cb]">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Image src="/icon.png" alt="PaceIQ" width={32} height={32} className="rounded-xl" />
+            <span className="text-[#282830] font-semibold text-lg tracking-tight">PaceIQ</span>
+          </div>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1.5 text-sm text-[#656779] hover:text-[#282830] transition-colors font-medium"
+          >
+            Mon dashboard <ArrowRight size={14} />
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#6b9a23] opacity-[0.06] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-20 right-1/4 w-80 h-80 bg-[#ff9359] opacity-[0.07] rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto px-6 py-24 text-center flex flex-col items-center gap-6">
+          <Image src="/icon.png" alt="PaceIQ" width={64} height={64} className="rounded-2xl shadow-md mb-2" />
+
+          <h1 className="text-5xl sm:text-6xl font-bold text-[#282830] tracking-tight leading-tight max-w-2xl">
+            Prépare ta prochaine{" "}
+            <span className="text-[#6b9a23]">course.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="text-[#656779] text-lg max-w-md leading-relaxed">
+            PaceIQ génère un plan d'entraînement personnalisé selon ton niveau,
+            ton objectif et ta disponibilité — et s'adapte au fil de tes séances.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <Link
+            href="/onboarding"
+            className="mt-2 inline-flex items-center gap-2 bg-[#6b9a23] hover:bg-[#5a8219] text-white font-semibold px-7 py-4 rounded-2xl text-sm transition-colors shadow-sm"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Créer mon plan d'entraînement
+            <ArrowRight size={15} />
+          </Link>
         </div>
-      </main>
+      </div>
+
+      {/* Features */}
+      <div className="max-w-4xl mx-auto px-6 pb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {features.map((f) => (
+            <div key={f.title} className="bg-white border border-[#dde5cb] rounded-2xl p-6 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-[#6b9a23]/8 flex items-center justify-center mb-4">
+                <f.icon size={18} className="text-[#6b9a23]" strokeWidth={1.75} />
+              </div>
+              <div className="font-semibold text-[#282830] text-sm mb-1.5">{f.title}</div>
+              <div className="text-[#656779] text-sm leading-relaxed">{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-[#dde5cb] bg-white">
+        <div className="max-w-5xl mx-auto px-6 py-6 text-center text-[#9ea0ae] text-xs">
+          PaceIQ — {new Date().getFullYear()}
+        </div>
+      </footer>
     </div>
   );
 }
