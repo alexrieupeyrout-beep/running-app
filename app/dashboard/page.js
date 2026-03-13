@@ -28,4 +28,4 @@ export default async function Dashboard() {
       </ul>
     </main>
   )
-}
+}export const revalidate = 0
