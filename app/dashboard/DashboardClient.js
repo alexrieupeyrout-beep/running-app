@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings, RefreshCw, XCircle } from 'lucide-react'
 
 const INTENSITE_COLORS = {
   'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
@@ -31,7 +31,7 @@ const T = {
   green:   { color: '#02A257' },
 }
 
-function PlanSection({ plan }) {
+function PlanSection({ plan, onAbandon }) {
   const semaines = plan.semaines || []
   const totalWeeks = semaines.length
 
@@ -91,6 +91,43 @@ function PlanSection({ plan }) {
           <span style={{ ...T.green, fontWeight: '600' }}>{progress}% complété</span>
           <span>Course</span>
         </div>
+      </div>
+
+      {/* Plan actions */}
+      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <Link
+          href="/onboarding"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+            padding: '0.55rem 1rem', borderRadius: '10px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '600',
+            background: 'white', border: '1px solid #c5e6d5', color: '#464754',
+          }}
+        >
+          <Settings size={14} color="#9ea0ae" />
+          Modifier le plan
+        </Link>
+        <Link
+          href="/onboarding"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+            padding: '0.55rem 1rem', borderRadius: '10px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '600',
+            background: '#02A257', color: 'white', border: '1px solid #02A257',
+          }}
+        >
+          <RefreshCw size={14} color="white" />
+          Nouveau plan
+        </Link>
+        <button
+          onClick={() => onAbandon(plan.id)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+            padding: '0.55rem 1rem', borderRadius: '10px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer',
+            background: 'white', border: '1px solid #fecaca', color: '#dc2626',
+          }}
+        >
+          <XCircle size={14} color="#dc2626" />
+          Abandonner
+        </button>
       </div>
 
       {/* Week navigation */}
@@ -192,6 +229,8 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
   const [dureeMin, setDureeMin] = useState('')
   const [dureeMax, setDureeMax] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmAbandon, setConfirmAbandon] = useState(null)
+  const [abandonLoading, setAbandonLoading] = useState(false)
 
   const now = new Date()
   const filtered = courses.filter(c => {
@@ -221,6 +260,18 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
   const handleDelete = async (id) => {
     await fetch(`/api/courses/${id}`, { method: 'DELETE' })
     setConfirmDelete(null)
+    router.refresh()
+  }
+
+  const handleAbandon = async (planId) => {
+    setAbandonLoading(true)
+    await fetch('/api/plan/abandon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: planId }),
+    })
+    setAbandonLoading(false)
+    setConfirmAbandon(null)
     router.refresh()
   }
 
@@ -361,7 +412,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
         {/* ── Tab: Plan ── */}
         {activeTab === 'plan' && (
-          plan ? <PlanSection plan={plan} /> : (
+          plan ? <PlanSection plan={plan} onAbandon={setConfirmAbandon} /> : (
             <div style={{ ...T.card, padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
@@ -385,6 +436,39 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
               <button onClick={() => setConfirmDelete(null)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: '1px solid #c5e6d5', cursor: 'pointer', background: 'white', fontWeight: '500', ...T.muted }}>Annuler</button>
               <button onClick={() => handleDelete(confirmDelete)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: '600' }}>Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Abandon plan confirm modal ── */}
+      {confirmAbandon && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '380px', width: '90%', textAlign: 'center', border: '1px solid #fecaca' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+              <XCircle size={22} color="#dc2626" />
+            </div>
+            <h3 style={{ marginBottom: '0.4rem', ...T.primary, fontSize: '1rem' }}>Abandonner ce plan ?</h3>
+            <p style={{ ...T.muted, marginBottom: '0.5rem', fontSize: '0.88rem', lineHeight: '1.5' }}>
+              Le plan sera archivé et tu pourras en créer un nouveau à tout moment.
+            </p>
+            <p style={{ color: '#dc2626', fontSize: '0.8rem', marginBottom: '1.5rem', fontWeight: '500' }}>
+              Ta progression et tes séances validées ne seront pas perdues.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => setConfirmAbandon(null)}
+                style={{ flex: 1, padding: '0.65rem 1rem', borderRadius: '10px', border: '1px solid #c5e6d5', cursor: 'pointer', background: 'white', fontWeight: '500', ...T.muted, fontSize: '0.88rem' }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleAbandon(confirmAbandon)}
+                disabled={abandonLoading}
+                style={{ flex: 1, padding: '0.65rem 1rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#dc2626', color: 'white', fontWeight: '600', fontSize: '0.88rem', opacity: abandonLoading ? 0.6 : 1 }}
+              >
+                {abandonLoading ? 'En cours…' : 'Abandonner'}
+              </button>
             </div>
           </div>
         </div>
