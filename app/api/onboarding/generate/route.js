@@ -20,7 +20,7 @@ export async function POST(request) {
       .select('athlete_id')
       .order('athlete_id', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (tokenError || !tokenRow) {
       return Response.json({ error: 'Aucun compte Strava connecté' }, { status: 400 })

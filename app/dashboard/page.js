@@ -9,10 +9,10 @@ const supabase = createClient(
 )
 
 export default async function Dashboard() {
-  const { data: courses } = await supabase
-    .from('courses')
-    .select('*')
-    .order('date', { ascending: false })
+  const [{ data: courses }, { data: plan }] = await Promise.all([
+    supabase.from('courses').select('*').order('date', { ascending: false }),
+    supabase.from('plans').select('*').eq('statut', 'actif').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+  ])
 
-  return <DashboardClient courses={courses || []} />
+  return <DashboardClient courses={courses || []} plan={plan || null} />
 }
