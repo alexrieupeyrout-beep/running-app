@@ -210,8 +210,6 @@ export default function Onboarding() {
   const confidence = computeConfidence(data)
   const refFields = REF_DISTANCES[data.distance] || []
   const hasRefTimes = Object.values(data.refTimes).some(v => v?.time?.trim())
-  const TRACKER_STEP = 5
-
   const weeksUntilRace = data.raceDate
     ? Math.floor((new Date(data.raceDate) - new Date()) / (1000 * 60 * 60 * 24 * 7))
     : null
@@ -423,32 +421,32 @@ export default function Onboarding() {
           {/* Step 5 — Tracker */}
           {step === 5 && (
             <div className="flex flex-col gap-5">
-              <StepHeader title="Suis tes séances automatiquement" subtitle="Connecte ton tracker d'activité pour que tes séances soient validées dès que tu cours." />
-              <a
-                href="/api/auth/strava"
-                className="w-full flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl hover:border-[#6b9a23]/40 hover:shadow-md transition-all group shadow-sm"
-              >
-                <div className="w-12 h-12 rounded-xl bg-[#FC4C02] flex items-center justify-center flex-shrink-0">
-                  <StravaIcon />
+              <StepHeader title="Suis tes séances automatiquement" subtitle="Connecte un tracker d'activité pour valider tes séances automatiquement." />
+              <div className="flex flex-col gap-3 opacity-50 pointer-events-none select-none">
+                <div className="w-full flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-[#FC4C02] flex items-center justify-center flex-shrink-0">
+                    <StravaIcon />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-semibold text-[#282830]">Strava</div>
+                    <div className="text-xs text-[#656779] mt-0.5">Sync automatique de tes activités</div>
+                  </div>
+                  <span className="text-xs font-semibold bg-[#f5f8ee] text-[#9ea0ae] border border-[#dde5cb] px-2.5 py-1 rounded-full">Bientôt</span>
                 </div>
-                <div className="flex-1 text-left">
-                  <div className="text-sm font-semibold text-[#282830]">Connecter Strava</div>
-                  <div className="text-xs text-[#656779] mt-0.5">Sync automatique de tes activités</div>
+                <div className="w-full flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ea0ae" strokeWidth="1.75"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-semibold text-[#282830]">Garmin · Apple Watch</div>
+                    <div className="text-xs text-[#656779] mt-0.5">Connecte ta montre directement</div>
+                  </div>
+                  <span className="text-xs font-semibold bg-[#f5f8ee] text-[#9ea0ae] border border-[#dde5cb] px-2.5 py-1 rounded-full">Bientôt</span>
                 </div>
-                <span className="text-[#c4c7d6] group-hover:text-[#6b9a23] transition-colors text-lg">→</span>
-              </a>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-[#dde5cb]" />
-                <span className="text-xs text-[#c4c7d6]">ou</span>
-                <div className="flex-1 h-px bg-[#dde5cb]" />
               </div>
-              <button
-                onClick={() => setStep(s => s + 1)}
-                className="w-full py-3.5 rounded-2xl border border-[#dde5cb] bg-white text-sm text-[#656779] hover:text-[#282830] hover:border-[#6b9a23]/30 transition-all shadow-sm font-medium"
-              >
-                Passer — je le ferai plus tard
-              </button>
-              <p className="text-xs text-[#c4c7d6] text-center">Garmin, Apple Watch… disponibles prochainement.</p>
+              <p className="text-xs text-[#9ea0ae] text-center leading-relaxed">
+                La connexion aux trackers sera disponible prochainement.<br />Tu pourras l'activer depuis ton dashboard.
+              </p>
             </div>
           )}
 
@@ -489,7 +487,7 @@ export default function Onboarding() {
                 Retour
               </button>
             )}
-            {step < STEPS.length - 1 && step !== TRACKER_STEP ? (
+            {step < STEPS.length - 1 ? (
               <button
                 onClick={() => setStep(s => s + 1)}
                 disabled={!canNext()}
