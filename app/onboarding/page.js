@@ -168,6 +168,8 @@ export default function Onboarding() {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [generateError, setGenerateError] = useState(null)
+  const [elapsed, setElapsed] = useState(0)
   const [fromResume, setFromResume] = useState(false)
 
   const [data, setData] = useState({
@@ -295,6 +297,9 @@ export default function Onboarding() {
 
   const handleGenerate = async () => {
     setLoading(true)
+    setGenerateError(null)
+    setElapsed(0)
+    const timer = setInterval(() => setElapsed(s => s + 1), 1000)
     try {
       const payload = {
         distance: data.distance === 'Autres' ? (data.customDistance || 'Autre') : data.distance,
@@ -319,10 +324,15 @@ export default function Onboarding() {
         body: JSON.stringify(payload),
       })
       const json = await res.json()
-      if (json.success) router.push('/dashboard')
+      if (json.success) {
+        router.push('/dashboard')
+      } else {
+        setGenerateError(json.error || 'Une erreur est survenue')
+      }
     } catch (e) {
-      console.error(e)
+      setGenerateError(e.message || 'Erreur réseau')
     } finally {
+      clearInterval(timer)
       setLoading(false)
     }
   }
@@ -833,9 +843,43 @@ export default function Onboarding() {
 
               <ConfidenceIndicator confidence={confidence} />
 
-              <p className="text-xs text-[#c4c7d6] text-center leading-relaxed">
-                Le plan sera généré par IA et s'adaptera au fil de tes sorties.
-              </p>
+              {generateError && (
+                <div className="flex gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
+                  <AlertTriangle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-red-700 text-sm font-semibold">Erreur lors de la génération</p>
+                    <p className="text-red-500 text-xs mt-0.5">{generateError}</p>
+                  </div>
+                </div>
+              )}
+
+              {loading && (
+                <div className="bg-[#f5f8ee] border border-[#dde5cb] rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-[#282830]">Claude génère ton plan…</span>
+                    <span className="text-xs font-mono text-[#6b9a23] font-bold">{elapsed}s</span>
+                  </div>
+                  <div className="h-1.5 bg-[#dde5cb] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#6b9a23] rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min((elapsed / 35) * 100, 95)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-[#9ea0ae] mt-2">
+                    {elapsed < 5 ? 'Analyse de ton profil…'
+                      : elapsed < 12 ? 'Construction des semaines de préparation…'
+                      : elapsed < 20 ? 'Calibrage des allures et intensités…'
+                      : elapsed < 28 ? 'Finalisation du plan…'
+                      : 'Presque prêt…'}
+                  </p>
+                </div>
+              )}
+
+              {!loading && !generateError && (
+                <p className="text-xs text-[#c4c7d6] text-center leading-relaxed">
+                  Le plan sera généré par IA et s'adaptera au fil de tes sorties.
+                </p>
+              )}
             </div>
           )}
 
