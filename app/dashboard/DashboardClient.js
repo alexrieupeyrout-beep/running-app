@@ -23,12 +23,12 @@ const TYPE_ICONS = {
 
 // ── Shared style tokens ──────────────────────────────────────
 const T = {
-  card:    { background: 'white', border: '1px solid #dde5cb', borderRadius: '16px' },
+  card:    { background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px' },
   label:   { fontSize: '0.7rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em' },
   primary: { color: '#282830' },
   muted:   { color: '#656779' },
   faint:   { color: '#9ea0ae' },
-  green:   { color: '#6b9a23' },
+  green:   { color: '#02A257' },
 }
 
 function PlanSection({ plan }) {
@@ -83,8 +83,8 @@ function PlanSection({ plan }) {
           </div>
         </div>
         {/* Progress bar */}
-        <div style={{ height: '6px', background: '#edf3de', borderRadius: '99px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: '#6b9a23', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+        <div style={{ height: '6px', background: '#daf0e8', borderRadius: '99px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: '#02A257', borderRadius: '99px', transition: 'width 0.5s ease' }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', fontSize: '0.7rem', ...T.faint }}>
           <span>Début</span>
@@ -98,7 +98,7 @@ function PlanSection({ plan }) {
         <button
           onClick={() => setSelectedWeek(w => Math.max(0, w - 1))}
           disabled={selectedWeek === 0}
-          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #dde5cb', background: 'white', cursor: selectedWeek === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === 0 ? 0.3 : 1, flexShrink: 0 }}
+          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #c5e6d5', background: 'white', cursor: selectedWeek === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === 0 ? 0.3 : 1, flexShrink: 0 }}
         >
           <ChevronLeft size={16} color="#464754" />
         </button>
@@ -109,9 +109,9 @@ function PlanSection({ plan }) {
               onClick={() => setSelectedWeek(i)}
               style={{
                 flexShrink: 0, padding: '0.3rem 0.7rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer', border: '1px solid',
-                background: i === selectedWeek ? '#6b9a23' : i === currentWeekIndex ? '#f5f8ee' : 'white',
-                color:      i === selectedWeek ? 'white'   : i === currentWeekIndex ? '#6b9a23' : '#9ea0ae',
-                borderColor:i === selectedWeek ? '#6b9a23' : i === currentWeekIndex ? '#6b9a23' : '#dde5cb',
+                background: i === selectedWeek ? '#02A257' : i === currentWeekIndex ? '#f0faf5' : 'white',
+                color:      i === selectedWeek ? 'white'   : i === currentWeekIndex ? '#02A257' : '#9ea0ae',
+                borderColor:i === selectedWeek ? '#02A257' : i === currentWeekIndex ? '#02A257' : '#c5e6d5',
               }}
             >
               S{i + 1}
@@ -121,7 +121,7 @@ function PlanSection({ plan }) {
         <button
           onClick={() => setSelectedWeek(w => Math.min(totalWeeks - 1, w + 1))}
           disabled={selectedWeek === totalWeeks - 1}
-          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #dde5cb', background: 'white', cursor: selectedWeek === totalWeeks - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === totalWeeks - 1 ? 0.3 : 1, flexShrink: 0 }}
+          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #c5e6d5', background: 'white', cursor: selectedWeek === totalWeeks - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === totalWeeks - 1 ? 0.3 : 1, flexShrink: 0 }}
         >
           <ChevronRight size={16} color="#464754" />
         </button>
@@ -129,7 +129,7 @@ function PlanSection({ plan }) {
 
       {/* Week detail */}
       <div style={{ ...T.card, overflow: 'hidden' }}>
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #edf3de', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #daf0e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ ...T.label }}>
               Semaine {semaine.numero}{selectedWeek === currentWeekIndex ? ' · Cette semaine' : ''}
@@ -225,36 +225,36 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
   }
 
   const periodeBtn = (active) => ({
-    padding: '0.4rem 0.75rem', borderRadius: '8px', border: `1px solid ${active ? '#6b9a23' : '#dde5cb'}`,
-    cursor: 'pointer', fontSize: '0.82rem', background: active ? '#6b9a23' : 'white',
+    padding: '0.4rem 0.75rem', borderRadius: '8px', border: `1px solid ${active ? '#02A257' : '#c5e6d5'}`,
+    cursor: 'pointer', fontSize: '0.82rem', background: active ? '#02A257' : 'white',
     color: active ? 'white' : '#656779', fontWeight: active ? '600' : '400',
   })
 
   const inputStyle = {
-    padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid #dde5cb',
+    padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid #c5e6d5',
     fontSize: '0.82rem', width: '76px', background: 'white', color: '#282830', outline: 'none',
   }
 
   const tabStyle = (key) => ({
     padding: '0.5rem 1.1rem', borderRadius: '9px', border: 'none', cursor: 'pointer',
     fontSize: '0.88rem', fontWeight: activeTab === key ? '600' : '400',
-    background: activeTab === key ? '#f5f8ee' : 'transparent',
-    color: activeTab === key ? '#6b9a23' : '#9ea0ae',
+    background: activeTab === key ? '#f0faf5' : 'transparent',
+    color: activeTab === key ? '#02A257' : '#9ea0ae',
     transition: 'all 0.15s',
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f8ee', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f0faf5', fontFamily: 'system-ui, sans-serif' }}>
 
       {/* ── Sticky header ────────────────────────────── */}
-      <div style={{ position: 'sticky', top: 0, background: 'white', borderBottom: '1px solid #dde5cb', zIndex: 10 }}>
+      <div style={{ position: 'sticky', top: 0, background: 'white', borderBottom: '1px solid #c5e6d5', zIndex: 10 }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0' }}>
 
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
-              <Image src="/icon.png" alt="PaceIQ" width={28} height={28} style={{ borderRadius: '8px' }} />
-              <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#282830', letterSpacing: '-0.01em' }}>PaceIQ</span>
+              <Image src="/icon.png" alt="VITE" width={28} height={28} style={{ borderRadius: '8px' }} />
+              <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1rem', letterSpacing: '-0.01em' }}>VITE</span>
             </div>
 
             {/* Tabs */}
@@ -262,7 +262,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
               <button style={tabStyle('dashboard')} onClick={() => setActiveTab('dashboard')}>Dashboard</button>
               <button style={{ ...tabStyle('plan'), display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => setActiveTab('plan')}>
                 Plan
-                <span style={{ fontSize: '0.6rem', fontWeight: '700', background: '#6b9a23', color: 'white', borderRadius: '6px', padding: '0.1rem 0.4rem', letterSpacing: '0.04em' }}>BETA</span>
+                <span style={{ fontSize: '0.6rem', fontWeight: '700', background: '#02A257', color: 'white', borderRadius: '6px', padding: '0.1rem 0.4rem', letterSpacing: '0.04em' }}>BETA</span>
               </button>
             </div>
 
@@ -270,9 +270,9 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button
                 onClick={() => setProfilOpen(o => !o)}
-                style={{ width: '34px', height: '34px', borderRadius: '50%', border: `2px solid ${stravaConnected ? '#6b9a23' : '#dde5cb'}`, background: '#f5f8ee', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: '34px', height: '34px', borderRadius: '50%', border: `2px solid ${stravaConnected ? '#02A257' : '#c5e6d5'}`, background: '#f0faf5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b9a23" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#02A257" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="8" r="4"/>
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                 </svg>
@@ -318,7 +318,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
             {/* Overlay "En cours de spec" */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)', borderRadius: '16px' }}>
-              <div style={{ background: 'white', border: '1px solid #dde5cb', borderRadius: '16px', padding: '1.5rem 2.5rem', textAlign: 'center', boxShadow: '0 4px 24px rgba(40,40,48,0.1)' }}>
+              <div style={{ background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.5rem 2.5rem', textAlign: 'center', boxShadow: '0 4px 24px rgba(40,40,48,0.1)' }}>
                 <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>🛠️</div>
                 <div style={{ fontWeight: '700', color: '#282830', fontSize: '1rem', marginBottom: '0.3rem' }}>En cours de spec</div>
                 <div style={{ fontSize: '0.82rem', color: '#9ea0ae' }}>Cette section arrive bientôt.</div>
@@ -339,7 +339,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
               {/* Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
                 {['Kilomètres', 'Courses', 'Allure moy.', 'FC moyenne', 'Dénivelé'].map((label) => (
-                  <div key={label} style={{ ...T.card, padding: '1rem 1.1rem', borderLeft: '3px solid #6b9a23' }}>
+                  <div key={label} style={{ ...T.card, padding: '1rem 1.1rem', borderLeft: '3px solid #02A257' }}>
                     <div style={{ ...T.label, marginBottom: '0.4rem' }}>{label}</div>
                     <div style={{ fontSize: '1.45rem', fontWeight: '700', color: '#282830' }}>—</div>
                   </div>
@@ -367,7 +367,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
                 <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
                 <div style={{ fontSize: '0.85rem', ...T.muted }}>Crée ton plan d'entraînement personnalisé pour commencer.</div>
               </div>
-              <Link href="/onboarding" style={{ background: '#6b9a23', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
+              <Link href="/onboarding" style={{ background: '#02A257', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
                 Créer mon plan →
               </Link>
             </div>
@@ -378,12 +378,12 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
       {/* ── Delete confirm modal ── */}
       {confirmDelete && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '360px', width: '90%', textAlign: 'center', border: '1px solid #dde5cb' }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '360px', width: '90%', textAlign: 'center', border: '1px solid #c5e6d5' }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🗑</div>
             <h3 style={{ marginBottom: '0.4rem', ...T.primary }}>Supprimer cette course ?</h3>
             <p style={{ ...T.muted, marginBottom: '1.5rem', fontSize: '0.88rem' }}>Cette action est irréversible.</p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button onClick={() => setConfirmDelete(null)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: '1px solid #dde5cb', cursor: 'pointer', background: 'white', fontWeight: '500', ...T.muted }}>Annuler</button>
+              <button onClick={() => setConfirmDelete(null)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: '1px solid #c5e6d5', cursor: 'pointer', background: 'white', fontWeight: '500', ...T.muted }}>Annuler</button>
               <button onClick={() => handleDelete(confirmDelete)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: '600' }}>Supprimer</button>
             </div>
           </div>

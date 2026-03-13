@@ -6,7 +6,7 @@ export default function Connect() {
       <div className="w-full max-w-sm flex flex-col items-center gap-8 text-center">
         {/* Logo */}
         <Link href="/" className="text-lg font-semibold tracking-tight hover:text-zinc-300 transition-colors">
-          PaceIQ
+          VITE
         </Link>
 
         {/* Card */}

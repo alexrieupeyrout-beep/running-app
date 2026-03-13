@@ -14,8 +14,8 @@ function generatePlan(data) {
   const sessions = data.sessionsPerWeek || 3
   const days = data.preferredDays || ['Mardi', 'Jeudi', 'Samedi']
 
-  const baseVol = parseFloat(data.kmPerWeek) ||
-    (data.kmPerWeek === '<30km' ? 20 : data.kmPerWeek === '30-50km' ? 38 : data.kmPerWeek === '>50km' ? 55 : 25)
+  const baseVol = parseFloat(data.kmPerWeekCustom) || parseFloat(data.kmPerWeek) ||
+    (data.kmPerWeek === '<30km' ? 20 : data.kmPerWeek === '30-60km' ? 45 : data.kmPerWeek === '>60km' ? 70 : 25)
 
   const THEMES = [
     'Mise en jambes', 'Construction aérobie', 'Développement', 'Récupération active',

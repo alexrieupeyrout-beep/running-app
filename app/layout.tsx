@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PaceIQ — Analysez chaque kilomètre",
+  title: "VITE — Analysez chaque kilomètre",
   description: "Synchronisez vos courses Strava et analysez votre progression running.",
 };
 
