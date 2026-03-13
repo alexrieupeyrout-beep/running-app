@@ -2,22 +2,33 @@
 import Graphique from './Graphique'
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Calendar, Target, Zap, TrendingUp } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const INTENSITE_COLORS = {
-  'facile': { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
-  'modéré': { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  'intense': { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
+  'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
+  'modéré':       { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
+  'intense':      { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
   'récupération': { bg: '#f5f3ff', color: '#7c3aed', border: '#ddd6fe' },
 }
 
 const TYPE_ICONS = {
-  'Footing léger': '🟢',
-  'Sortie longue': '🔵',
-  'Fractionné': '🔴',
-  'Allure spécifique': '🟠',
-  'Récupération active': '🟣',
+  'Footing léger':      '🟢',
+  'Sortie longue':      '🔵',
+  'Fractionné':         '🔴',
+  'Allure spécifique':  '🟠',
+  'Récupération active':'🟣',
+}
+
+// ── Shared style tokens ──────────────────────────────────────
+const T = {
+  card:    { background: 'white', border: '1px solid #dde5cb', borderRadius: '16px' },
+  label:   { fontSize: '0.7rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em' },
+  primary: { color: '#282830' },
+  muted:   { color: '#656779' },
+  faint:   { color: '#9ea0ae' },
+  green:   { color: '#6b9a23' },
 }
 
 function PlanSection({ plan }) {
@@ -38,56 +49,59 @@ function PlanSection({ plan }) {
   const progress = Math.round(((selectedWeek + 1) / totalWeeks) * 100)
 
   return (
-    <div style={{ marginBottom: '2.5rem' }}>
-      {/* Header plan */}
-      <div style={{ background: 'white', border: '1px solid #dde5cb', borderRadius: '16px', padding: '1.25rem 1.5rem', marginBottom: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Plan header card */}
+      <div style={{ ...T.card, padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#9ea0ae', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>Plan actif</div>
-            <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#282830' }}>
+            <div style={{ ...T.label, marginBottom: '0.3rem' }}>Plan actif</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: '700', ...T.primary }}>
               {plan.distance}{plan.race_name ? ` — ${plan.race_name}` : ''}
             </div>
             {raceDate && (
-              <div style={{ fontSize: '0.8rem', color: '#656779', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '0.8rem', ...T.muted, marginTop: '0.2rem' }}>
                 📅 {raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                {weeksLeft !== null && weeksLeft > 0 && <span style={{ marginLeft: '0.5rem', color: '#6b9a23', fontWeight: '600' }}>· J-{weeksLeft * 7}</span>}
+                {weeksLeft !== null && weeksLeft > 0 && (
+                  <span style={{ marginLeft: '0.5rem', ...T.green, fontWeight: '600' }}>· J-{weeksLeft * 7}</span>
+                )}
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1.25rem' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#6b9a23' }}>{selectedWeek + 1}<span style={{ fontSize: '0.8rem', color: '#9ea0ae', fontWeight: '400' }}>/{totalWeeks}</span></div>
-              <div style={{ fontSize: '0.7rem', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Semaine</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: '700', ...T.green }}>
+                {selectedWeek + 1}<span style={{ fontSize: '0.8rem', ...T.faint, fontWeight: '400' }}>/{totalWeeks}</span>
+              </div>
+              <div style={{ ...T.label }}>Semaine</div>
             </div>
             {plan.target_time && (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#282830' }}>{plan.target_time}</div>
-                <div style={{ fontSize: '0.7rem', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Objectif</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '700', ...T.primary }}>{plan.target_time}</div>
+                <div style={{ ...T.label }}>Objectif</div>
               </div>
             )}
           </div>
         </div>
         {/* Progress bar */}
-        <div style={{ height: '6px', background: '#f0f0f0', borderRadius: '99px', overflow: 'hidden' }}>
+        <div style={{ height: '6px', background: '#edf3de', borderRadius: '99px', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${progress}%`, background: '#6b9a23', borderRadius: '99px', transition: 'width 0.5s ease' }} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', fontSize: '0.7rem', color: '#c4c7d6' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', fontSize: '0.7rem', ...T.faint }}>
           <span>Début</span>
-          <span>{progress}% complété</span>
+          <span style={{ ...T.green, fontWeight: '600' }}>{progress}% complété</span>
           <span>Course</span>
         </div>
       </div>
 
-      {/* Navigation semaine */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+      {/* Week navigation */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <button
           onClick={() => setSelectedWeek(w => Math.max(0, w - 1))}
           disabled={selectedWeek === 0}
-          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #dde5cb', background: 'white', cursor: selectedWeek === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === 0 ? 0.3 : 1 }}
+          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #dde5cb', background: 'white', cursor: selectedWeek === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === 0 ? 0.3 : 1, flexShrink: 0 }}
         >
           <ChevronLeft size={16} color="#464754" />
         </button>
-
         <div style={{ flex: 1, display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '2px' }}>
           {semaines.map((s, i) => (
             <button
@@ -96,62 +110,60 @@ function PlanSection({ plan }) {
               style={{
                 flexShrink: 0, padding: '0.3rem 0.7rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer', border: '1px solid',
                 background: i === selectedWeek ? '#6b9a23' : i === currentWeekIndex ? '#f5f8ee' : 'white',
-                color: i === selectedWeek ? 'white' : i === currentWeekIndex ? '#6b9a23' : '#9ea0ae',
-                borderColor: i === selectedWeek ? '#6b9a23' : i === currentWeekIndex ? '#6b9a23' : '#dde5cb',
+                color:      i === selectedWeek ? 'white'   : i === currentWeekIndex ? '#6b9a23' : '#9ea0ae',
+                borderColor:i === selectedWeek ? '#6b9a23' : i === currentWeekIndex ? '#6b9a23' : '#dde5cb',
               }}
             >
               S{i + 1}
             </button>
           ))}
         </div>
-
         <button
           onClick={() => setSelectedWeek(w => Math.min(totalWeeks - 1, w + 1))}
           disabled={selectedWeek === totalWeeks - 1}
-          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #dde5cb', background: 'white', cursor: selectedWeek === totalWeeks - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === totalWeeks - 1 ? 0.3 : 1 }}
+          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #dde5cb', background: 'white', cursor: selectedWeek === totalWeeks - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === totalWeeks - 1 ? 0.3 : 1, flexShrink: 0 }}
         >
           <ChevronRight size={16} color="#464754" />
         </button>
       </div>
 
-      {/* Semaine detail */}
-      <div style={{ background: 'white', border: '1px solid #dde5cb', borderRadius: '16px', overflow: 'hidden' }}>
+      {/* Week detail */}
+      <div style={{ ...T.card, overflow: 'hidden' }}>
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #edf3de', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: '0.7rem', color: '#9ea0ae', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Semaine {semaine.numero} {selectedWeek === currentWeekIndex ? '· Cette semaine' : ''}
-            </span>
-            <div style={{ fontWeight: '700', color: '#282830', marginTop: '0.15rem' }}>{semaine.theme}</div>
+            <div style={{ ...T.label }}>
+              Semaine {semaine.numero}{selectedWeek === currentWeekIndex ? ' · Cette semaine' : ''}
+            </div>
+            <div style={{ fontWeight: '700', ...T.primary, marginTop: '0.15rem' }}>{semaine.theme}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: '700', color: '#6b9a23', fontSize: '1.1rem' }}>{semaine.volume_km} km</div>
-            <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{semaine.seances?.length} séances</div>
+            <div style={{ fontWeight: '700', ...T.green, fontSize: '1.1rem' }}>{semaine.volume_km} km</div>
+            <div style={{ fontSize: '0.75rem', ...T.faint }}>{semaine.seances?.length} séances</div>
           </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div>
           {(semaine.seances || []).map((seance, i) => {
             const colors = INTENSITE_COLORS[seance.intensite] || INTENSITE_COLORS['modéré']
             return (
               <div key={i} style={{ padding: '1rem 1.5rem', borderBottom: i < semaine.seances.length - 1 ? '1px solid #f5f5f5' : 'none', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '44px', flexShrink: 0, textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#6b9a23', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{seance.jour?.slice(0, 3)}</div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '700', ...T.green, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{seance.jour?.slice(0, 3)}</div>
                   <div style={{ fontSize: '1.1rem', marginTop: '0.1rem' }}>{TYPE_ICONS[seance.type] || '🏃'}</div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: '600', color: '#282830', fontSize: '0.9rem' }}>{seance.type}</span>
+                    <span style={{ fontWeight: '600', ...T.primary, fontSize: '0.9rem' }}>{seance.type}</span>
                     <span style={{ fontSize: '0.7rem', fontWeight: '600', padding: '0.15rem 0.5rem', borderRadius: '99px', background: colors.bg, color: colors.color, border: `1px solid ${colors.border}` }}>
                       {seance.intensite}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#656779', marginBottom: '0.3rem' }}>{seance.description}</div>
-                  {seance.details && <div style={{ fontSize: '0.75rem', color: '#9ea0ae', fontStyle: 'italic' }}>{seance.details}</div>}
+                  <div style={{ fontSize: '0.82rem', ...T.muted, marginBottom: '0.3rem' }}>{seance.description}</div>
+                  {seance.details && <div style={{ fontSize: '0.75rem', ...T.faint, fontStyle: 'italic' }}>{seance.details}</div>}
                 </div>
                 <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                  <div style={{ fontWeight: '700', color: '#282830', fontSize: '0.9rem' }}>{seance.distance_km} km</div>
-                  {seance.allure_cible && <div style={{ fontSize: '0.75rem', color: '#6b9a23', fontWeight: '600' }}>{seance.allure_cible}</div>}
-                  {seance.duree_minutes && <div style={{ fontSize: '0.72rem', color: '#9ea0ae' }}>{seance.duree_minutes} min</div>}
+                  <div style={{ fontWeight: '700', ...T.primary, fontSize: '0.9rem' }}>{seance.distance_km} km</div>
+                  {seance.allure_cible && <div style={{ fontSize: '0.75rem', ...T.green, fontWeight: '600' }}>{seance.allure_cible}</div>}
+                  {seance.duree_minutes && <div style={{ fontSize: '0.72rem', ...T.faint }}>{seance.duree_minutes} min</div>}
                 </div>
               </div>
             )
@@ -171,6 +183,8 @@ const formatAllure = (allure) => {
 
 export default function DashboardClient({ courses, plan, stravaConnected }) {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState('dashboard')
+  const [profilOpen, setProfilOpen] = useState(false)
   const [periode, setPeriode] = useState('tout')
   const [distanceMin, setDistanceMin] = useState('')
   const [distanceMax, setDistanceMax] = useState('')
@@ -209,132 +223,197 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
     router.refresh()
   }
 
-  const inputStyle = { padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.85rem', width: '80px' }
-  const btnStyle = (active) => ({
-    padding: '0.4rem 0.8rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.85rem',
-    background: active ? '#6366f1' : '#f3f4f6', color: active ? 'white' : '#374151', fontWeight: active ? '600' : '400'
+  const periodeBtn = (active) => ({
+    padding: '0.4rem 0.75rem', borderRadius: '8px', border: `1px solid ${active ? '#6b9a23' : '#dde5cb'}`,
+    cursor: 'pointer', fontSize: '0.82rem', background: active ? '#6b9a23' : 'white',
+    color: active ? 'white' : '#656779', fontWeight: active ? '600' : '400',
+  })
+
+  const inputStyle = {
+    padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid #dde5cb',
+    fontSize: '0.82rem', width: '76px', background: 'white', color: '#282830', outline: 'none',
+  }
+
+  const tabStyle = (key) => ({
+    padding: '0.5rem 1.1rem', borderRadius: '9px', border: 'none', cursor: 'pointer',
+    fontSize: '0.88rem', fontWeight: activeTab === key ? '600' : '400',
+    background: activeTab === key ? '#f5f8ee' : 'transparent',
+    color: activeTab === key ? '#6b9a23' : '#9ea0ae',
+    transition: 'all 0.15s',
   })
 
   return (
-    <main style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '0.25rem' }}>PaceIQ</h1>
-      <p style={{ color: '#888', marginBottom: '2rem' }}>Dashboard running</p>
+    <div style={{ minHeight: '100vh', background: '#f5f8ee', fontFamily: 'system-ui, sans-serif' }}>
 
-      {plan ? <PlanSection plan={plan} /> : (
-        <div style={{ background: '#f5f8ee', border: '1px solid #dde5cb', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ fontWeight: '600', color: '#282830', marginBottom: '0.25rem' }}>Aucun plan actif</div>
-            <div style={{ fontSize: '0.85rem', color: '#656779' }}>Crée ton plan d'entraînement personnalisé pour commencer.</div>
+      {/* ── Sticky header ────────────────────────────── */}
+      <div style={{ position: 'sticky', top: 0, background: 'white', borderBottom: '1px solid #dde5cb', zIndex: 10 }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0' }}>
+
+            {/* Logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
+              <Image src="/icon.png" alt="PaceIQ" width={28} height={28} style={{ borderRadius: '8px' }} />
+              <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#282830', letterSpacing: '-0.01em' }}>PaceIQ</span>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: '0.1rem', flex: 1 }}>
+              {[['dashboard', 'Dashboard'], ['plan', 'Plan']].map(([key, label]) => (
+                <button key={key} style={tabStyle(key)} onClick={() => setActiveTab(key)}>{label}</button>
+              ))}
+            </div>
+
+            {/* Profile */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                onClick={() => setProfilOpen(o => !o)}
+                style={{ width: '34px', height: '34px', borderRadius: '50%', border: `2px solid ${stravaConnected ? '#6b9a23' : '#dde5cb'}`, background: '#f5f8ee', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b9a23" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                </svg>
+              </button>
+
+              {profilOpen && (
+                <>
+                  <div onClick={() => setProfilOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
+                  <div style={{ position: 'absolute', top: '42px', right: 0, zIndex: 20, ...T.card, padding: '1rem 1.1rem', minWidth: '230px', boxShadow: '0 8px 24px rgba(40,40,48,0.1)' }}>
+                    <div style={{ ...T.label, marginBottom: '0.75rem' }}>Tracker connecté</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: '600', ...T.primary }}>Strava</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '500', color: stravaConnected ? '#16a34a' : '#9ea0ae' }}>
+                          {stravaConnected ? '● Synchronisé' : '○ Non connecté'}
+                        </div>
+                      </div>
+                      {stravaConnected ? (
+                        <span style={{ fontSize: '0.7rem', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.2rem 0.55rem', fontWeight: '600' }}>Actif</span>
+                      ) : (
+                        <a href="/api/auth/strava" style={{ fontSize: '0.75rem', fontWeight: '600', color: 'white', textDecoration: 'none', background: '#FC4C02', padding: '0.3rem 0.65rem', borderRadius: '8px' }}>
+                          Connecter
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-          <Link href="/onboarding" style={{ background: '#6b9a23', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
-            Créer mon plan →
-          </Link>
-        </div>
-      )}
-
-      <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '1rem 1.2rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          {[['tout', 'Tout'], ['semaine', 'Cette semaine'], ['mois', 'Ce mois'], ['annee', 'Cette année']].map(([val, label]) => (
-            <button key={val} style={btnStyle(periode === val)} onClick={() => setPeriode(val)}>{label}</button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem' }}>
-          <span style={{ color: '#888' }}>Distance</span>
-          <input style={inputStyle} placeholder="min km" value={distanceMin} onChange={e => setDistanceMin(e.target.value)} />
-          <span style={{ color: '#888' }}>→</span>
-          <input style={inputStyle} placeholder="max km" value={distanceMax} onChange={e => setDistanceMax(e.target.value)} />
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem' }}>
-          <span style={{ color: '#888' }}>Durée</span>
-          <input style={inputStyle} placeholder="min min" value={dureeMin} onChange={e => setDureeMin(e.target.value)} />
-          <span style={{ color: '#888' }}>→</span>
-          <input style={inputStyle} placeholder="max min" value={dureeMax} onChange={e => setDureeMax(e.target.value)} />
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        {[
-          { label: 'Kilomètres', value: `${totalKm} km`, color: '#6366f1' },
-          { label: 'Courses', value: filtered.length, color: '#10b981' },
-          { label: 'Allure moy.', value: formatAllure(allureMoy), color: '#f59e0b' },
-          { label: 'FC moyenne', value: fcMoy ? `${Math.round(fcMoy)} bpm` : '—', color: '#ef4444' },
-          { label: 'Dénivelé', value: `${totalDenivele} m`, color: '#8b5cf6' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: '#f9fafb', borderRadius: '12px', padding: '1.2rem', borderLeft: `4px solid ${stat.color}` }}>
-            <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111' }}>{stat.value}</div>
-          </div>
-        ))}
-      </div>
+      {/* ── Page content ────────────────────────────── */}
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1.25rem 3rem' }}>
 
-      {/* Apps connectées */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#282830', marginBottom: '0.75rem' }}>Apps connectées</h2>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'white', border: `1px solid ${stravaConnected ? '#bbf7d0' : '#dde5cb'}`, borderRadius: '12px', padding: '0.75rem 1rem' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#282830' }}>Strava</div>
-              <div style={{ fontSize: '0.75rem', color: stravaConnected ? '#16a34a' : '#9ea0ae', fontWeight: stravaConnected ? '500' : '400' }}>
-                {stravaConnected ? '● Connecté' : '○ Non connecté'}
+        {/* ── Tab: Dashboard ── */}
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Filters */}
+            <div style={{ ...T.card, padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                {[['tout', 'Tout'], ['semaine', 'Semaine'], ['mois', 'Mois'], ['annee', 'Année']].map(([val, label]) => (
+                  <button key={val} style={periodeBtn(periode === val)} onClick={() => setPeriode(val)}>{label}</button>
+                ))}
+              </div>
+              <div style={{ width: '1px', height: '24px', background: '#dde5cb', flexShrink: 0 }} />
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', ...T.faint }}>Distance</span>
+                <input style={inputStyle} placeholder="min km" value={distanceMin} onChange={e => setDistanceMin(e.target.value)} />
+                <span style={{ ...T.faint, fontSize: '0.8rem' }}>–</span>
+                <input style={inputStyle} placeholder="max km" value={distanceMax} onChange={e => setDistanceMax(e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', ...T.faint }}>Durée</span>
+                <input style={inputStyle} placeholder="min min" value={dureeMin} onChange={e => setDureeMin(e.target.value)} />
+                <span style={{ ...T.faint, fontSize: '0.8rem' }}>–</span>
+                <input style={inputStyle} placeholder="max min" value={dureeMax} onChange={e => setDureeMax(e.target.value)} />
               </div>
             </div>
-            {!stravaConnected && (
-              <a href="/api/auth/strava" style={{ marginLeft: '0.5rem', fontSize: '0.75rem', fontWeight: '600', color: '#6b9a23', textDecoration: 'none', background: '#f5f8ee', border: '1px solid #dde5cb', padding: '0.3rem 0.7rem', borderRadius: '8px' }}>
-                Connecter →
-              </a>
-            )}
-          </div>
-          {['Garmin', 'Apple Watch'].map(app => (
-            <div key={app} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'white', border: '1px solid #dde5cb', borderRadius: '12px', padding: '0.75rem 1rem', opacity: 0.5 }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ea0ae" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              </div>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              {[
+                { label: 'Kilomètres',  value: `${totalKm} km` },
+                { label: 'Courses',     value: filtered.length },
+                { label: 'Allure moy.', value: formatAllure(allureMoy) },
+                { label: 'FC moyenne',  value: fcMoy ? `${Math.round(fcMoy)} bpm` : '—' },
+                { label: 'Dénivelé',    value: `${totalDenivele} m` },
+              ].map((stat) => (
+                <div key={stat.label} style={{ ...T.card, padding: '1rem 1.1rem', borderLeft: '3px solid #6b9a23' }}>
+                  <div style={{ ...T.label, marginBottom: '0.4rem' }}>{stat.label}</div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: '700', color: '#282830' }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Graphique */}
+            <div style={{ ...T.card, padding: '1.25rem', marginBottom: '1.25rem' }}>
+              <Graphique courses={filtered} />
+            </div>
+
+            {/* Courses list */}
+            <div style={{ ...T.label, marginBottom: '0.6rem' }}>
+              {filtered.length} course{filtered.length > 1 ? 's' : ''}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {filtered.map((course) => (
+                <div key={course.id} style={{ ...T.card, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <Link href={`/dashboard/${course.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
+                    <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.2rem' }}>{course.note || 'Course'}</div>
+                    <div style={{ fontSize: '0.82rem', ...T.muted }}>{course.date}</div>
+                  </Link>
+                  <div style={{ display: 'flex', gap: '0.85rem', fontSize: '0.88rem', alignItems: 'center', flexWrap: 'wrap', ...T.muted }}>
+                    <span>📍 {course.distance_km} km</span>
+                    <span>⏱ {course.duree_minutes} min</span>
+                    {course.allure_moyenne && <span>🏃 {formatAllure(course.allure_moyenne)}/km</span>}
+                    {course.frequence_cardiaque_moy && <span>❤️ {Math.round(course.frequence_cardiaque_moy)} bpm</span>}
+                    <button onClick={() => setConfirmDelete(course.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#ef4444', padding: '0' }}>🗑</button>
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <div style={{ ...T.card, padding: '2rem', textAlign: 'center', ...T.faint, fontSize: '0.9rem' }}>
+                  Aucune course pour cette période.
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── Tab: Plan ── */}
+        {activeTab === 'plan' && (
+          plan ? <PlanSection plan={plan} /> : (
+            <div style={{ ...T.card, padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#282830' }}>{app}</div>
-                <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>Bientôt disponible</div>
+                <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
+                <div style={{ fontSize: '0.85rem', ...T.muted }}>Crée ton plan d'entraînement personnalisé pour commencer.</div>
               </div>
+              <Link href="/onboarding" style={{ background: '#6b9a23', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
+                Créer mon plan →
+              </Link>
             </div>
-          ))}
-        </div>
+          )
+        )}
       </div>
 
-      <Graphique courses={filtered} /> <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
-        {filtered.length} course{filtered.length > 1 ? 's' : ''}
-      </h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        {filtered.map((course) => (
-          <div key={course.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '1rem 1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <Link href={`/dashboard/${course.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
-              <div style={{ fontWeight: '600', marginBottom: '0.2rem' }}>{course.note || 'Course'}</div>
-              <div style={{ fontSize: '0.85rem', color: '#888' }}>{course.date}</div>
-            </Link>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span>📍 {course.distance_km} km</span>
-              <span>⏱ {course.duree_minutes} min</span>
-              {course.allure_moyenne && <span>🏃 {formatAllure(course.allure_moyenne)}/km</span>}
-              {course.frequence_cardiaque_moy && <span>❤️ {Math.round(course.frequence_cardiaque_moy)} bpm</span>}
-              <button onClick={() => setConfirmDelete(course.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#ef4444' }}>🗑</button>
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* ── Delete confirm modal ── */}
       {confirmDelete && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', maxWidth: '380px', width: '90%', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '360px', width: '90%', textAlign: 'center', border: '1px solid #dde5cb' }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🗑</div>
-            <h3 style={{ marginBottom: '0.5rem' }}>Supprimer cette course ?</h3>
-            <p style={{ color: '#888', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Cette action est irréversible.</p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button onClick={() => setConfirmDelete(null)} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #e5e7eb', cursor: 'pointer', background: 'white' }}>Annuler</button>
-              <button onClick={() => handleDelete(confirmDelete)} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: '600' }}>Supprimer</button>
+            <h3 style={{ marginBottom: '0.4rem', ...T.primary }}>Supprimer cette course ?</h3>
+            <p style={{ ...T.muted, marginBottom: '1.5rem', fontSize: '0.88rem' }}>Cette action est irréversible.</p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button onClick={() => setConfirmDelete(null)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: '1px solid #dde5cb', cursor: 'pointer', background: 'white', fontWeight: '500', ...T.muted }}>Annuler</button>
+              <button onClick={() => handleDelete(confirmDelete)} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: '600' }}>Supprimer</button>
             </div>
           </div>
         </div>
       )}
-    </main>
+    </div>
   )
 }
