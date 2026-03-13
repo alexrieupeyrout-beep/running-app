@@ -3,7 +3,7 @@ import Graphique from './Graphique'
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const INTENSITE_COLORS = {
@@ -183,7 +183,8 @@ const formatAllure = (allure) => {
 
 export default function DashboardClient({ courses, plan, stravaConnected }) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'plan' ? 'plan' : 'dashboard')
   const [profilOpen, setProfilOpen] = useState(false)
   const [periode, setPeriode] = useState('tout')
   const [distanceMin, setDistanceMin] = useState('')
@@ -258,9 +259,11 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '0.1rem', flex: 1 }}>
-              {[['dashboard', 'Dashboard'], ['plan', 'Plan']].map(([key, label]) => (
-                <button key={key} style={tabStyle(key)} onClick={() => setActiveTab(key)}>{label}</button>
-              ))}
+              <button style={tabStyle('dashboard')} onClick={() => setActiveTab('dashboard')}>Dashboard</button>
+              <button style={{ ...tabStyle('plan'), display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => setActiveTab('plan')}>
+                Plan
+                <span style={{ fontSize: '0.6rem', fontWeight: '700', background: '#6b9a23', color: 'white', borderRadius: '6px', padding: '0.1rem 0.4rem', letterSpacing: '0.04em' }}>BETA</span>
+              </button>
             </div>
 
             {/* Profile */}
@@ -311,77 +314,49 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
         {/* ── Tab: Dashboard ── */}
         {activeTab === 'dashboard' && (
-          <>
-            {/* Filters */}
-            <div style={{ ...T.card, padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                {[['tout', 'Tout'], ['semaine', 'Semaine'], ['mois', 'Mois'], ['annee', 'Année']].map(([val, label]) => (
-                  <button key={val} style={periodeBtn(periode === val)} onClick={() => setPeriode(val)}>{label}</button>
+          <div style={{ position: 'relative', minHeight: '400px' }}>
+
+            {/* Overlay "En cours de spec" */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)', borderRadius: '16px' }}>
+              <div style={{ background: 'white', border: '1px solid #dde5cb', borderRadius: '16px', padding: '1.5rem 2.5rem', textAlign: 'center', boxShadow: '0 4px 24px rgba(40,40,48,0.1)' }}>
+                <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>🛠️</div>
+                <div style={{ fontWeight: '700', color: '#282830', fontSize: '1rem', marginBottom: '0.3rem' }}>En cours de spec</div>
+                <div style={{ fontSize: '0.82rem', color: '#9ea0ae' }}>Cette section arrive bientôt.</div>
+              </div>
+            </div>
+
+            {/* Grayed content */}
+            <div style={{ opacity: 0.25, pointerEvents: 'none', userSelect: 'none' }}>
+              {/* Filters */}
+              <div style={{ ...T.card, padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {[['tout', 'Tout'], ['semaine', 'Semaine'], ['mois', 'Mois'], ['annee', 'Année']].map(([val, label]) => (
+                    <button key={val} style={periodeBtn(val === 'tout')}>{label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                {['Kilomètres', 'Courses', 'Allure moy.', 'FC moyenne', 'Dénivelé'].map((label) => (
+                  <div key={label} style={{ ...T.card, padding: '1rem 1.1rem', borderLeft: '3px solid #6b9a23' }}>
+                    <div style={{ ...T.label, marginBottom: '0.4rem' }}>{label}</div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: '700', color: '#282830' }}>—</div>
+                  </div>
                 ))}
               </div>
-              <div style={{ width: '1px', height: '24px', background: '#dde5cb', flexShrink: 0 }} />
-              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', ...T.faint }}>Distance</span>
-                <input style={inputStyle} placeholder="min km" value={distanceMin} onChange={e => setDistanceMin(e.target.value)} />
-                <span style={{ ...T.faint, fontSize: '0.8rem' }}>–</span>
-                <input style={inputStyle} placeholder="max km" value={distanceMax} onChange={e => setDistanceMax(e.target.value)} />
-              </div>
-              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', ...T.faint }}>Durée</span>
-                <input style={inputStyle} placeholder="min min" value={dureeMin} onChange={e => setDureeMin(e.target.value)} />
-                <span style={{ ...T.faint, fontSize: '0.8rem' }}>–</span>
-                <input style={inputStyle} placeholder="max min" value={dureeMax} onChange={e => setDureeMax(e.target.value)} />
+
+              {/* Graphique placeholder */}
+              <div style={{ ...T.card, padding: '1.25rem', marginBottom: '1.25rem', height: '180px' }} />
+
+              {/* Courses placeholder */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ ...T.card, padding: '1rem 1.25rem', height: '58px' }} />
+                ))}
               </div>
             </div>
-
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              {[
-                { label: 'Kilomètres',  value: `${totalKm} km` },
-                { label: 'Courses',     value: filtered.length },
-                { label: 'Allure moy.', value: formatAllure(allureMoy) },
-                { label: 'FC moyenne',  value: fcMoy ? `${Math.round(fcMoy)} bpm` : '—' },
-                { label: 'Dénivelé',    value: `${totalDenivele} m` },
-              ].map((stat) => (
-                <div key={stat.label} style={{ ...T.card, padding: '1rem 1.1rem', borderLeft: '3px solid #6b9a23' }}>
-                  <div style={{ ...T.label, marginBottom: '0.4rem' }}>{stat.label}</div>
-                  <div style={{ fontSize: '1.45rem', fontWeight: '700', color: '#282830' }}>{stat.value}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Graphique */}
-            <div style={{ ...T.card, padding: '1.25rem', marginBottom: '1.25rem' }}>
-              <Graphique courses={filtered} />
-            </div>
-
-            {/* Courses list */}
-            <div style={{ ...T.label, marginBottom: '0.6rem' }}>
-              {filtered.length} course{filtered.length > 1 ? 's' : ''}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {filtered.map((course) => (
-                <div key={course.id} style={{ ...T.card, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <Link href={`/dashboard/${course.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
-                    <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.2rem' }}>{course.note || 'Course'}</div>
-                    <div style={{ fontSize: '0.82rem', ...T.muted }}>{course.date}</div>
-                  </Link>
-                  <div style={{ display: 'flex', gap: '0.85rem', fontSize: '0.88rem', alignItems: 'center', flexWrap: 'wrap', ...T.muted }}>
-                    <span>📍 {course.distance_km} km</span>
-                    <span>⏱ {course.duree_minutes} min</span>
-                    {course.allure_moyenne && <span>🏃 {formatAllure(course.allure_moyenne)}/km</span>}
-                    {course.frequence_cardiaque_moy && <span>❤️ {Math.round(course.frequence_cardiaque_moy)} bpm</span>}
-                    <button onClick={() => setConfirmDelete(course.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#ef4444', padding: '0' }}>🗑</button>
-                  </div>
-                </div>
-              ))}
-              {filtered.length === 0 && (
-                <div style={{ ...T.card, padding: '2rem', textAlign: 'center', ...T.faint, fontSize: '0.9rem' }}>
-                  Aucune course pour cette période.
-                </div>
-              )}
-            </div>
-          </>
+          </div>
         )}
 
         {/* ── Tab: Plan ── */}

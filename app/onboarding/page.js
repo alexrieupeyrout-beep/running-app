@@ -337,7 +337,7 @@ export default function Onboarding() {
       })
       const json = await res.json()
       if (json.success) {
-        router.push('/dashboard')
+        router.push('/dashboard?tab=plan')
       } else {
         setGenerateError(json.error || 'Une erreur est survenue')
       }
