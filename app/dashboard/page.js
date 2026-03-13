@@ -1,10 +1,18 @@
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY
+)
 
 export default async function Dashboard() {
-  const { data: courses } = await supabase
+  const { data: courses, error } = await supabase
     .from('courses')
     .select('*')
     .order('date', { ascending: false })
+
+  console.log('Courses:', courses)
+  console.log('Erreur:', error)
 
   return (
     <main style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
