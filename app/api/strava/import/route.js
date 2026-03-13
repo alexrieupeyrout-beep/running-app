@@ -1,21 +1,22 @@
 import { supabase } from '@/lib/supabase'
+import { getValidStravaToken } from '@/lib/strava'
 
 export async function GET() {
-  const { data: tokens } = await supabase
-    .from('strava_tokens')
-    .select('*')
-    .single()
-
-  if (!tokens) {
-    return Response.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/connect`)
-  }
+  const token = await getValidStravaToken()
+  console.log('Token:', token)
 
   const response = await fetch(
     'https://www.strava.com/api/v3/athlete/activities?per_page=50',
-    { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+    { headers: { Authorization: `Bearer ${token}` } }
   )
 
   const activities = await response.json()
+  console.log('Réponse Strava:', JSON.stringify(activities))
+
+  if (!Array.isArray(activities)) {
+    return Response.json({ erreur: activities })
+  }
+
   const runs = activities.filter(a => a.type === 'Run')
 
   for (const activity of runs) {
@@ -28,5 +29,5 @@ export async function GET() {
     }, { onConflict: 'strava_id' })
   }
 
-  return Response.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard`)
+  return Response.json({ imported: runs.length })
 }
