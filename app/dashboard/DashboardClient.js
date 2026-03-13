@@ -169,7 +169,7 @@ const formatAllure = (allure) => {
   return `${min}'${sec.toString().padStart(2, '0')}"`
 }
 
-export default function DashboardClient({ courses, plan }) {
+export default function DashboardClient({ courses, plan, stravaConnected }) {
   const router = useRouter()
   const [periode, setPeriode] = useState('tout')
   const [distanceMin, setDistanceMin] = useState('')
@@ -265,6 +265,40 @@ export default function DashboardClient({ courses, plan }) {
             <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111' }}>{stat.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* Apps connectées */}
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#282830', marginBottom: '0.75rem' }}>Apps connectées</h2>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'white', border: `1px solid ${stravaConnected ? '#bbf7d0' : '#dde5cb'}`, borderRadius: '12px', padding: '0.75rem 1rem' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#282830' }}>Strava</div>
+              <div style={{ fontSize: '0.75rem', color: stravaConnected ? '#16a34a' : '#9ea0ae', fontWeight: stravaConnected ? '500' : '400' }}>
+                {stravaConnected ? '● Connecté' : '○ Non connecté'}
+              </div>
+            </div>
+            {!stravaConnected && (
+              <a href="/api/auth/strava" style={{ marginLeft: '0.5rem', fontSize: '0.75rem', fontWeight: '600', color: '#6b9a23', textDecoration: 'none', background: '#f5f8ee', border: '1px solid #dde5cb', padding: '0.3rem 0.7rem', borderRadius: '8px' }}>
+                Connecter →
+              </a>
+            )}
+          </div>
+          {['Garmin', 'Apple Watch'].map(app => (
+            <div key={app} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'white', border: '1px solid #dde5cb', borderRadius: '12px', padding: '0.75rem 1rem', opacity: 0.5 }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ea0ae" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#282830' }}>{app}</div>
+                <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>Bientôt disponible</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Graphique courses={filtered} /> <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>

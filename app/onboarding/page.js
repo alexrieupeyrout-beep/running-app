@@ -170,6 +170,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false)
   const [generateError, setGenerateError] = useState(null)
   const [elapsed, setElapsed] = useState(0)
+  const [stravaConnected, setStravaConnected] = useState(null) // null=unknown, true/false
   const [fromResume, setFromResume] = useState(false)
 
   const [data, setData] = useState({
@@ -275,6 +276,17 @@ export default function Onboarding() {
     return true
   }
 
+  const goToStep = (n) => {
+    if (n === 5 && stravaConnected === null) {
+      fetch('/api/strava/status').then(r => r.json()).then(d => {
+        setStravaConnected(d.connected)
+        setStep(n)
+      })
+    } else {
+      setStep(n)
+    }
+  }
+
   const goNext = () => {
     if (step === 3) {
       setData(d => ({
@@ -286,7 +298,7 @@ export default function Onboarding() {
       setFromResume(false)
       setStep(STEPS.length)
     } else {
-      setStep(s => s + 1)
+      goToStep(step + 1)
     }
   }
 
@@ -759,37 +771,58 @@ export default function Onboarding() {
             <div className="flex flex-col gap-5">
               <StepHeader title="Suis tes séances automatiquement" subtitle="Connecte ton tracker pour valider tes séances dès que tu cours — 0 saisie manuelle." />
 
-              <div className="flex gap-3 bg-[#f5f8ee] border border-[#dde5cb] rounded-2xl p-4">
-                <Check size={15} className="text-[#6b9a23] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                <p className="text-sm text-[#656779] leading-relaxed">
-                  En connectant ton tracker, tes sorties sont synchronisées automatiquement et chaque séance est validée en temps réel.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <a
-                  href="/api/auth/strava"
-                  className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm hover:border-[#FC4C02]/50 hover:shadow-md transition-all group"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-[#FC4C02] flex items-center justify-center flex-shrink-0">
-                    <StravaIcon />
+              {stravaConnected ? (
+                <>
+                  <div className="flex gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                    <Check size={15} className="text-emerald-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <div>
+                      <p className="text-emerald-700 text-sm font-semibold">Strava déjà connecté</p>
+                      <p className="text-emerald-600 text-xs mt-0.5 leading-relaxed">Tes activités se synchronisent automatiquement — tu n'as rien à faire.</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold text-[#282830]">Connecter Strava</div>
-                    <div className="text-xs text-[#656779] mt-0.5">Sync automatique de tes activités</div>
+                  <div className="flex items-center gap-4 p-5 bg-white border border-emerald-200 rounded-2xl shadow-sm">
+                    <div className="w-11 h-11 rounded-xl bg-[#FC4C02] flex items-center justify-center flex-shrink-0">
+                      <StravaIcon />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-[#282830]">Strava</div>
+                      <div className="text-xs text-emerald-600 mt-0.5 font-medium">● Connecté et actif</div>
+                    </div>
+                    <Check size={18} className="text-emerald-500" strokeWidth={2.5} />
                   </div>
-                  <span className="text-[#c4c7d6] group-hover:text-[#FC4C02] transition-colors text-lg">→</span>
-                </a>
-                <div className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm opacity-50 pointer-events-none select-none">
-                  <div className="w-11 h-11 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ea0ae" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </>
+              ) : (
+                <>
+                  <div className="flex gap-3 bg-[#f5f8ee] border border-[#dde5cb] rounded-2xl p-4">
+                    <Check size={15} className="text-[#6b9a23] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <p className="text-sm text-[#656779] leading-relaxed">
+                      En connectant ton tracker, tes sorties sont synchronisées automatiquement et chaque séance est validée en temps réel.
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold text-[#282830]">Garmin · Apple Watch</div>
-                    <div className="text-xs text-[#656779] mt-0.5">Connecte ta montre directement</div>
-                  </div>
-                  <span className="text-xs font-semibold bg-[#f5f8ee] text-[#9ea0ae] border border-[#dde5cb] px-2.5 py-1 rounded-full">Bientôt</span>
+                  <a
+                    href="/api/auth/strava"
+                    className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm hover:border-[#FC4C02]/50 hover:shadow-md transition-all group"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-[#FC4C02] flex items-center justify-center flex-shrink-0">
+                      <StravaIcon />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-[#282830]">Connecter Strava</div>
+                      <div className="text-xs text-[#656779] mt-0.5">Sync automatique de tes activités</div>
+                    </div>
+                    <span className="text-[#c4c7d6] group-hover:text-[#FC4C02] transition-colors text-lg">→</span>
+                  </a>
+                </>
+              )}
+              <div className="flex items-center gap-4 p-5 bg-white border border-[#dde5cb] rounded-2xl shadow-sm opacity-50 pointer-events-none select-none">
+                <div className="w-11 h-11 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ea0ae" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                 </div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-[#282830]">Garmin · Apple Watch</div>
+                  <div className="text-xs text-[#656779] mt-0.5">Connecte ta montre directement</div>
+                </div>
+                <span className="text-xs font-semibold bg-[#f5f8ee] text-[#9ea0ae] border border-[#dde5cb] px-2.5 py-1 rounded-full">Bientôt</span>
               </div>
 
             </div>

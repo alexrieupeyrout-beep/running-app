@@ -9,10 +9,11 @@ const supabase = createClient(
 )
 
 export default async function Dashboard() {
-  const [{ data: courses }, { data: plan }] = await Promise.all([
+  const [{ data: courses }, { data: plan }, { data: stravaToken }] = await Promise.all([
     supabase.from('courses').select('*').order('date', { ascending: false }),
     supabase.from('plans').select('*').eq('statut', 'actif').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('strava_tokens').select('athlete_id, expires_at').order('athlete_id', { ascending: false }).limit(1).maybeSingle(),
   ])
 
-  return <DashboardClient courses={courses || []} plan={plan || null} />
+  return <DashboardClient courses={courses || []} plan={plan || null} stravaConnected={!!stravaToken} />
 }
