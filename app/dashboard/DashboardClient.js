@@ -1,4 +1,5 @@
-'use client'
+'use client' 
+import Graphique from './Graphique'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -97,7 +98,7 @@ export default function DashboardClient({ courses }) {
         ))}
       </div>
 
-      <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
+      <Graphique courses={filtered} /> <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
         {filtered.length} course{filtered.length > 1 ? 's' : ''}
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
