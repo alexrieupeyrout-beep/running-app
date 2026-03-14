@@ -1,0 +1,6 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="white"/>
+  <!-- Green pill -->
+  <rect x="56" y="176" width="400" height="160" rx="80" stroke="#02A257" stroke-width="44" fill="none"/>
+</svg>
