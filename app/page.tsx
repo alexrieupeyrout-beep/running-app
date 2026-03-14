@@ -144,12 +144,11 @@ export default function Home() {
 
           <h1 className="text-5xl sm:text-6xl font-bold text-[#282830] tracking-tight leading-tight max-w-2xl">
             Prépare ta prochaine{" "}
-            <span className="text-[#02A257]">course.</span>
+            <span className="text-[#02A257]">course</span>
           </h1>
 
           <p className="text-[#656779] text-lg max-w-md leading-relaxed">
-            VITE génère un plan d'entraînement personnalisé selon ton niveau,
-            ton objectif et ta disponibilité — et s'adapte au fil de tes séances.
+            Un plan sur mesure, une course dans le viseur. VITE s'adapte à ton niveau et ta dispo, et évolue avec toi au fil de tes séances — c'est l'IA à ton allure.
           </p>
 
           <Link
@@ -217,6 +216,47 @@ export default function Home() {
               <div className="text-[#656779] text-sm leading-relaxed">{f.desc}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* App CTA */}
+      <div className="max-w-4xl mx-auto px-6 pb-24">
+        <div style={{ background: "#02A257", borderRadius: "28px", padding: "3rem 2.5rem", textAlign: "center", position: "relative", overflow: "hidden" }}>
+          {/* Blobs déco */}
+          <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
+          <div style={{ position: "absolute", bottom: "-60px", left: "-30px", width: "240px", height: "240px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>Bientôt disponible</div>
+            <h2 style={{ fontSize: "2rem", fontWeight: "900", color: "white", marginBottom: "0.75rem", lineHeight: 1.2 }}>
+              VITE dans ta poche
+            </h2>
+            <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.75)", maxWidth: "380px", margin: "0 auto 2rem", lineHeight: 1.6 }}>
+              L'app mobile arrive. Suis tes séances, consulte ton plan et valide tes courses — où que tu sois.
+            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+              {/* App Store */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1.4rem", borderRadius: "14px", background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.6)", lineHeight: 1, marginBottom: "0.15rem" }}>Bientôt sur</div>
+                  <div style={{ fontSize: "1rem", fontWeight: "800", color: "white", lineHeight: 1 }}>App Store</div>
+                </div>
+              </div>
+              {/* Google Play */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1.4rem", borderRadius: "14px", background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M3.18 23.76c.3.17.64.22.97.15l11.18-11.18L12 9.4 3.18 23.76zm16.4-11.09L16.9 11.2 5.27.59c-.1-.1-.23-.17-.37-.2L16.58 11.2l2.99 1.47zM2.1.7C2.04.86 2 1.04 2 1.23v21.54c0 .19.04.37.1.53L13.6 12 2.1.7zm19.3 9.43l-2.32-1.14L15.8 12l3.28 3.28 2.32-1.14c.66-.32 1.1-.96 1.1-1.71s-.44-1.38-1.1-1.7z"/>
+                </svg>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.6)", lineHeight: 1, marginBottom: "0.15rem" }}>Bientôt sur</div>
+                  <div style={{ fontSize: "1rem", fontWeight: "800", color: "white", lineHeight: 1 }}>Google Play</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
