@@ -532,9 +532,9 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 0' }}>
 
             {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0, textDecoration: 'none' }}>
               <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1.5rem', letterSpacing: '-0.01em' }}>VITE</span>
-            </div>
+            </Link>
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '0.1rem', flex: 1 }}>
