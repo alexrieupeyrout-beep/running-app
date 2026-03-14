@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Crosshair, Activity, RefreshCw, ArrowRight } from "lucide-react";
 
 const features = [
@@ -27,8 +26,7 @@ export default function Home() {
       <nav className="bg-white border-b border-[#c5e6d5]">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Image src="/icon.png" alt="VITE" width={30} height={30} className="rounded-xl" />
-            <span className="text-[#02A257] font-black text-xl tracking-tight">VITE</span>
+            <span className="text-[#02A257] font-black text-4xl tracking-tight">VITE</span>
           </div>
           <Link
             href="/dashboard"
@@ -45,6 +43,13 @@ export default function Home() {
         <div className="absolute top-20 right-1/4 w-80 h-80 bg-[#ff9359] opacity-[0.07] rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-4xl mx-auto px-6 py-24 text-center flex flex-col items-center gap-6">
+
+          {/* App icon */}
+          <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center shadow-lg border border-[#c5e6d5]">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+              <rect x="4" y="14" width="44" height="24" rx="12" stroke="#02A257" strokeWidth="5" fill="none"/>
+            </svg>
+          </div>
 
           <h1 className="text-5xl sm:text-6xl font-bold text-[#282830] tracking-tight leading-tight max-w-2xl">
             Prépare ta prochaine{" "}

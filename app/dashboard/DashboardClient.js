@@ -971,8 +971,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
-              <Image src="/icon.png" alt="VITE" width={28} height={28} style={{ borderRadius: '8px' }} />
-              <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1rem', letterSpacing: '-0.01em' }}>VITE</span>
+              <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1.5rem', letterSpacing: '-0.01em' }}>VITE</span>
             </div>
 
             {/* Tabs */}

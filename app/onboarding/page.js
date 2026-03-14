@@ -404,8 +404,7 @@ export default function Onboarding() {
         <div className="max-w-2xl mx-auto w-full px-4 sm:px-6">
           <div className="flex items-center justify-between py-3.5">
             <Link href="/" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
-              <Image src="/icon.png" alt="VITE" width={26} height={26} className="rounded-lg" />
-              <span className="text-[#02A257] font-black text-base tracking-tight">VITE</span>
+              <span className="text-[#02A257] font-black text-2xl tracking-tight">VITE</span>
             </Link>
             <div className="text-right">
               {!isResume ? (
