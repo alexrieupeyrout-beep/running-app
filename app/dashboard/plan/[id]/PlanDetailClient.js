@@ -246,21 +246,27 @@ export default function PlanDetailClient({ plan }) {
   return (
     <div style={{ minHeight: '100vh', background: '#f7f7f8' }}>
       {/* Header */}
-      <div style={{ background: 'white', borderBottom: "1px solid #e8e8e8", position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Link href="/dashboard?tab=plan" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', border: "1px solid #e8e8e8", background: 'white', textDecoration: 'none', flexShrink: 0 }}>
-            <ChevronLeft size={16} color="#464754" />
+      <div style={{ background: 'white', borderBottom: '1px solid #e8e8e8', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 1rem', height: '52px', display: 'flex', alignItems: 'center', gap: '0.75rem', position: 'relative' }}>
+          <Link href="/dashboard?tab=plan" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', borderRadius: '8px', border: '1px solid #e8e8e8', background: 'white', textDecoration: 'none', flexShrink: 0 }}>
+            <ChevronLeft size={15} color="#464754" />
           </Link>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: '700', fontSize: '1rem', color: '#282830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Plan{plan.race_name ? ` — ${plan.race_name}` : ` — ${plan.distance}`}
-            </div>
-            <div style={{ fontSize: '0.72rem', color: '#9ea0ae', display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.1rem' }}>
-              {raceDate && <span>{raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>}
-              {weeksLeft !== null && weeksLeft > 0 && <span style={{ color: '#02A257', fontWeight: '600' }}>· J-{weeksLeft * 7}</span>}
-              {plan.target_time && <span style={{ color: '#02A257', fontWeight: '600' }}>· {formatTargetTime(plan.target_time)}</span>}
-            </div>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+            <span style={{ fontWeight: '700', fontSize: '0.95rem', color: '#282830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1 }}>
+              {plan.race_name || plan.distance}
+            </span>
+            {plan.race_name && <span style={{ fontSize: '0.75rem', color: '#b0b3c1', flexShrink: 0 }}>{plan.distance}</span>}
           </div>
+          {raceDate && (
+            <span style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', fontSize: '0.75rem', color: '#9ea0ae', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+              {raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          )}
+          {weeksLeft !== null && weeksLeft > 0 && (
+            <span style={{ fontSize: '0.72rem', fontWeight: '700', background: '#f0faf5', color: '#02A257', border: '1.5px solid #c5e6d5', borderRadius: '99px', padding: '0.15rem 0.55rem', flexShrink: 0 }}>
+              J-{weeksLeft * 7}
+            </span>
+          )}
         </div>
       </div>
 
@@ -275,7 +281,7 @@ export default function PlanDetailClient({ plan }) {
           >
             <ChevronLeft size={15} color="#464754" />
           </button>
-          <div ref={weekScrollRef} style={{ flex: 1, display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+          <div ref={weekScrollRef} style={{ flex: 1, display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', justifyContent: totalWeeks <= 8 ? 'center' : 'flex-start' }}>
           {semaines.map((s, i) => {
             const totalSeances = s.seances?.length || 0
             const doneSeances = s.seances?.filter(se => se.completed || se.strava_activity || se.manual_activity).length || 0

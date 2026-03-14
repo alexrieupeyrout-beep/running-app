@@ -928,12 +928,12 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
       {confirmAbandon && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '380px', width: '90%', textAlign: 'center', border: '1px solid #fecaca' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-              <XCircle size={22} color="#dc2626" />
+            <div style={{ margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>
+              <XCircle size={32} color="#dc2626" strokeWidth={1.5} />
             </div>
             <h3 style={{ marginBottom: '0.4rem', ...T.primary, fontSize: '1rem' }}>Abandonner ce plan ?</h3>
             <p style={{ ...T.muted, marginBottom: '0.5rem', fontSize: '0.88rem', lineHeight: '1.5' }}>
-              Le plan sera archivé et tu pourras en créer un nouveau à tout moment.
+              Tu pourras en créer un nouveau à tout moment.
             </p>
             <p style={{ color: '#dc2626', fontSize: '0.8rem', marginBottom: '1.5rem', fontWeight: '500' }}>
               Ta progression et tes séances validées ne seront pas perdues.

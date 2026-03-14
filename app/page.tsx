@@ -148,7 +148,7 @@ export default function Home() {
           </h1>
 
           <p className="text-[#656779] text-lg max-w-md leading-relaxed">
-            Un plan sur mesure, une course dans le viseur. VITE s'adapte à ton niveau et ta dispo, et évolue avec toi au fil de tes séances — c'est l'IA à ton allure.
+            Un plan sur mesure, une course dans le viseur ?<br />VITE s'adapte à ton niveau et ta dispo, et évolue avec toi au fil de tes séances — c'est l'IA à ton allure.
           </p>
 
           <Link
@@ -197,7 +197,7 @@ export default function Home() {
               <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#02A257", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: 700, color: "white", flexShrink: 0 }}>E</div>
               <div>
                 <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "white" }}>Eliud — Iten, Kenya</div>
-                <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)" }}>Semi-marathon · Objectif 1h58</div>
+                <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)" }}>Marathon · Objectif 1h58</div>
               </div>
             </div>
           </div>
