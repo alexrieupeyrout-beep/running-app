@@ -457,6 +457,9 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
   const [profilData, setProfilData] = useState({ prenom: '', nom: '', dob: '', ville: '', sports: [] })
   const SPORTS = ['Course à pied', 'Trail', 'Vélo', 'Natation', 'Triathlon', 'Marche / Rando', 'Renforcement']
   const toggleSport = (s) => setProfilData(p => ({ ...p, sports: p.sports.includes(s) ? p.sports.filter(x => x !== s) : [...p.sports, s] }))
+  const [profilIcon, setProfilIcon] = useState(null)
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
+  const PROFILE_ICONS = ['🏃', '🚴', '🏊', '🥾', '🏋️', '🧘', '🚣', '🤸', '⛷️', '🏄', '🧗', '🤾']
   const [rps, setRps] = useState([])
   const [rpForm, setRpForm] = useState({ distance: '10K', date: '', chrono: '' })
   const [rpAddOpen, setRpAddOpen] = useState(false)
@@ -568,12 +571,17 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
             <div style={{ flexShrink: 0 }}>
               <button
                 onClick={() => setProfilOpen(true)}
-                style={{ width: '34px', height: '34px', borderRadius: '50%', border: `2px solid ${stravaConnected ? '#02A257' : '#c5e6d5'}`, background: '#f0faf5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#02A257" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="4"/>
-                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                </svg>
+                {profilData.prenom && (
+                  <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#282830' }}>{profilData.prenom}</span>
+                )}
+                <div style={{ width: '34px', height: '34px', borderRadius: '50%', border: `2px solid ${stravaConnected ? '#02A257' : '#c5e6d5'}`, background: '#f0faf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {profilIcon
+                    ? <span style={{ fontSize: '1rem', lineHeight: 1 }}>{profilIcon}</span>
+                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#02A257" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  }
+                </div>
               </button>
             </div>
 
@@ -584,19 +592,46 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
                   <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '380px', boxShadow: '0 8px 40px rgba(28,28,36,0.2)', overflow: 'hidden' }}>
 
                     {/* Header */}
-                    <div style={{ background: '#f0faf5', padding: '1.75rem 1.5rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid #e8f5ee' }}>
-                      <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#02A257', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="8" r="4"/>
-                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                        </svg>
+                    <div style={{ background: '#f0faf5', padding: '1.75rem 1.5rem 1.25rem', borderBottom: '1px solid #e8f5ee' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          <button
+                            onClick={() => setIconPickerOpen(o => !o)}
+                            style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#02A257', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid white', cursor: 'pointer', boxShadow: '0 2px 8px rgba(2,162,87,0.3)' }}
+                          >
+                            {profilIcon
+                              ? <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{profilIcon}</span>
+                              : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            }
+                          </button>
+                          <div style={{ position: 'absolute', bottom: 0, right: 0, width: '16px', height: '16px', borderRadius: '50%', background: 'white', border: '1.5px solid #e8e8e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: '#9ea0ae', cursor: 'pointer' }}
+                            onClick={() => setIconPickerOpen(o => !o)}>✏️</div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '700', fontSize: '1rem', color: '#282830' }}>
+                            {profilData.prenom && profilData.nom ? `${profilData.prenom} ${profilData.nom}` : 'Mon profil'}
+                          </div>
+                          {!profilData.prenom && <div style={{ fontSize: '0.72rem', color: '#b0b3c1', marginTop: '0.1rem' }}>Clique sur l'icône pour personnaliser</div>}
+                        </div>
+                        <button onClick={() => setProfilOpen(false)} style={{ border: 'none', background: 'white', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <XCircle size={18} color="#c0c2cc" />
+                        </button>
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: '700', fontSize: '1rem', color: '#282830' }}>Mon profil</div>
-                      </div>
-                      <button onClick={() => setProfilOpen(false)} style={{ border: 'none', background: 'white', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <XCircle size={18} color="#c0c2cc" />
-                      </button>
+                      {/* Icon picker */}
+                      {iconPickerOpen && (
+                        <div style={{ marginTop: '0.85rem', background: 'white', borderRadius: '14px', padding: '0.75rem', border: '1px solid #e8e8e8' }}>
+                          <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.5rem' }}>Choisis ton icône</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                            {PROFILE_ICONS.map(icon => (
+                              <button
+                                key={icon}
+                                onClick={() => { setProfilIcon(icon); setIconPickerOpen(false) }}
+                                style={{ width: '38px', height: '38px', borderRadius: '10px', border: `2px solid ${profilIcon === icon ? '#02A257' : '#e8e8e8'}`, background: profilIcon === icon ? '#f0faf5' : 'white', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >{icon}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '70vh', overflowY: 'auto' }}>
