@@ -1,10 +1,8 @@
 'use client'
-import Graphique from './Graphique'
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Settings, RefreshCw, XCircle, CheckCircle2, Circle, X } from 'lucide-react'
+import { Settings, RefreshCw, XCircle } from 'lucide-react'
 
 const INTENSITE_COLORS = {
   'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
@@ -135,624 +133,188 @@ const T = {
 }
 
 function PlanSection({ plan, onAbandon }) {
-  const router = useRouter()
-  const [localSemaines, setLocalSemaines] = useState(plan.semaines || [])
   const [menuOpen, setMenuOpen] = useState(false)
-  const [selectedSession, setSelectedSession] = useState(null)
-  const [addOpen, setAddOpen] = useState(false)
-  const [addForm, setAddForm] = useState({ date: new Date().toISOString().split('T')[0], type_activite: 'Run', distance_km: '', duree_minutes: '', frequence_cardiaque_moy: '', note: '' })
-  const [addLoading, setAddLoading] = useState(false)
-  const [addSuccess, setAddSuccess] = useState(false)
+  const [confOpen, setConfOpen] = useState(false)
 
-  const handleAddActivity = async () => {
-    setAddLoading(true)
-
-    // 1. Sauvegarder dans courses
-    await fetch('/api/courses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(addForm),
-    })
-
-    // 2. Trouver la séance correspondante par date
-    const DAY_IDX = { 0: ['dim','dimanche'], 1: ['lun','lundi'], 2: ['mar','mardi'], 3: ['mer','mercredi'], 4: ['jeu','jeudi'], 5: ['ven','vendredi'], 6: ['sam','samedi'] }
-    // Utiliser midi pour éviter les décalages UTC
-    const activityDate = new Date(addForm.date + 'T12:00:00')
-    const createdAt = new Date(plan.created_at)
-    // Calculer le lundi de la semaine de création (même logique que l'affichage)
-    const createdDow = createdAt.getDay() === 0 ? 7 : createdAt.getDay()
-    const planMonday = new Date(createdAt)
-    planMonday.setDate(createdAt.getDate() - (createdDow - 1))
-    planMonday.setHours(0, 0, 0, 0)
-    const daysDiff = Math.floor((activityDate - planMonday) / (1000 * 60 * 60 * 24))
-    const weekIndex = Math.floor(daysDiff / 7)
-    const dow = activityDate.getDay()
-    const matchingDays = DAY_IDX[dow] || []
-
-    const manualActivity = {
-      nom: addForm.note || `Activité manuelle`,
-      type_activite: addForm.type_activite,
-      distance_km: addForm.distance_km ? parseFloat(addForm.distance_km) : null,
-      duree_minutes: addForm.duree_minutes ? parseInt(addForm.duree_minutes) : null,
-      frequence_cardiaque_moy: addForm.frequence_cardiaque_moy ? parseInt(addForm.frequence_cardiaque_moy) : null,
-    }
-
-    if (weekIndex >= 0 && weekIndex < localSemaines.length) {
-      const week = localSemaines[weekIndex]
-      const sessionIndex = week.seances?.findIndex(s => matchingDays.includes(s.jour?.toLowerCase()))
-
-      if (sessionIndex >= 0) {
-        // Mise à jour optimiste
-        setLocalSemaines(prev => {
-          const updated = prev.map((w, wi) => wi !== weekIndex ? w : {
-            ...w,
-            seances: w.seances.map((s, si) => si !== sessionIndex ? s : {
-              ...s, completed: true, manual_activity: manualActivity,
-            }),
-          })
-          return updated
-        })
-
-        // Persistance en base
-        await fetch('/api/plan/session', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan_id: plan.id, week_index: weekIndex, session_index: sessionIndex, completed: true, manual_activity: manualActivity }),
-        })
-      }
-    }
-
-    setAddLoading(false)
-    setAddSuccess(true)
-    setTimeout(() => {
-      setAddSuccess(false)
-      setAddOpen(false)
-      setAddForm(f => ({ ...f, distance_km: '', duree_minutes: '', frequence_cardiaque_moy: '', note: '' }))
-    }, 1500)
-  }
-
-  const semaines = localSemaines
-  const totalWeeks = semaines.length
-
-  const createdAt = new Date(plan.created_at)
+  const semaines = plan.semaines || []
   const today = new Date()
-  const weeksPassed = Math.floor((today - createdAt) / (1000 * 60 * 60 * 24 * 7))
-  const currentWeekIndex = Math.min(Math.max(weeksPassed, 0), totalWeeks - 1)
-
-  const [selectedWeek, setSelectedWeek] = useState(currentWeekIndex)
-  const semaine = semaines[selectedWeek]
-  if (!semaine) return null
-
   const raceDate = plan.race_date ? new Date(plan.race_date) : null
   const weeksLeft = raceDate ? Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24 * 7)) : null
-  const totalSessions = localSemaines.reduce((sum, w) => sum + (w.seances?.length || 0), 0)
-  const completedSessions = localSemaines.reduce((sum, w) => sum + (w.seances?.filter(s => s.completed || getActivity(s).activity !== null).length || 0), 0)
+  const totalSessions = semaines.reduce((sum, w) => sum + (w.seances?.length || 0), 0)
+  const completedSessions = semaines.reduce((sum, w) => sum + (w.seances?.filter(s => s.completed || getActivity(s).activity !== null).length || 0), 0)
   const progress = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0
-
-  // Dates de la semaine sélectionnée
-  const DAY_OFFSETS = {
-    'Lundi': 0, 'Lun': 0,
-    'Mardi': 1, 'Mar': 1,
-    'Mercredi': 2, 'Mer': 2,
-    'Jeudi': 3, 'Jeu': 3,
-    'Vendredi': 4, 'Ven': 4,
-    'Samedi': 5, 'Sam': 5,
-    'Dimanche': 6, 'Dim': 6,
-  }
-  const weekStart = new Date(createdAt)
-  weekStart.setDate(weekStart.getDate() + selectedWeek * 7)
-  const dow = weekStart.getDay() === 0 ? 7 : weekStart.getDay()
-  const weekMonday = new Date(weekStart)
-  weekMonday.setDate(weekStart.getDate() - (dow - 1))
-  const weekSunday = new Date(weekMonday)
-  weekSunday.setDate(weekMonday.getDate() + 6)
-  const fmtDay = (d) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  const getSessionDate = (jour) => {
-    const offset = DAY_OFFSETS[jour] ?? 0
-    const d = new Date(weekMonday)
-    d.setDate(weekMonday.getDate() + offset)
-    return fmtDay(d)
-  }
   const confidence = computePlanConfidence(plan)
   const confStyle = CONF_TIERS[confidence.tier]
 
-  const toggleCompleted = async (weekIndex, sessionIndex) => {
-    const current = localSemaines[weekIndex].seances[sessionIndex].completed
-    const updated = localSemaines.map((w, wi) =>
-      wi !== weekIndex ? w : {
-        ...w,
-        seances: w.seances.map((s, si) =>
-          si !== sessionIndex ? s : { ...s, completed: !current }
-        ),
-      }
-    )
-    setLocalSemaines(updated)
-    await fetch('/api/plan/session', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan_id: plan.id, week_index: weekIndex, session_index: sessionIndex, completed: !current }),
-    })
-  }
+  // Jauge circulaire
+  const r = 34
+  const circ = 2 * Math.PI * r
+  const dash = circ * (confidence.score / 100)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Plan header card */}
-      <div style={{ ...T.card, padding: '1.25rem 1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+      {/* Plan recap card */}
+      <div style={{ ...T.card, overflow: 'hidden' }}>
+
+        {/* Zone 1 — En-tête */}
+        <div style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-              <div style={{ ...T.label }}>Plan actif</div>
-              {/* Gérer menu */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setMenuOpen(o => !o)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.15rem 0.5rem', borderRadius: '6px', border: '1px solid #c5e6d5', background: menuOpen ? '#f0faf5' : 'white', cursor: 'pointer', fontSize: '0.7rem', fontWeight: '600', color: '#9ea0ae', letterSpacing: '0.05em' }}
-                >
-                  <Settings size={11} color="#9ea0ae" />
-                  GÉRER
-                </button>
-                {menuOpen && (
-                  <>
-                    <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
-                    <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20, background: 'white', border: '1px solid #c5e6d5', borderRadius: '12px', boxShadow: '0 6px 20px rgba(40,40,48,0.1)', minWidth: '190px', overflow: 'hidden' }}>
-                      <Link
-                        href="/onboarding"
-                        onClick={() => setMenuOpen(false)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}
-                      >
-                        <Settings size={14} color="#9ea0ae" />
-                        Modifier le plan
-                      </Link>
-                      <Link
-                        href="/onboarding"
-                        onClick={() => setMenuOpen(false)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}
-                      >
-                        <RefreshCw size={14} color="#9ea0ae" />
-                        Nouveau plan
-                      </Link>
-                      <button
-                        onClick={() => { setMenuOpen(false); onAbandon(plan.id) }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#dc2626', textAlign: 'left' }}
-                      >
-                        <XCircle size={14} color="#dc2626" />
-                        Abandonner le plan
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-            <div style={{ fontSize: '1.1rem', fontWeight: '700', ...T.primary }}>
+            <div style={{ fontSize: '1.05rem', fontWeight: '700', ...T.primary }}>
               {plan.distance}{plan.race_name ? ` — ${plan.race_name}` : ''}
             </div>
             {raceDate && (
-              <div style={{ fontSize: '0.8rem', ...T.muted, marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '0.78rem', ...T.muted, marginTop: '0.2rem' }}>
                 📅 {raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                {weeksLeft !== null && weeksLeft > 0 && (
-                  <span style={{ marginLeft: '0.5rem', ...T.green, fontWeight: '600' }}>· J-{weeksLeft * 7}</span>
-                )}
+                {weeksLeft !== null && weeksLeft > 0 && <span style={{ marginLeft: '0.4rem', ...T.green, fontWeight: '600' }}>· J-{weeksLeft * 7}</span>}
               </div>
             )}
           </div>
-          {plan.target_time && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ ...T.label, marginBottom: '0.2rem' }}>Votre objectif</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', ...T.green, fontVariantNumeric: 'tabular-nums' }}>{formatTargetTime(plan.target_time)}</div>
-            </div>
-          )}
-        </div>
-        {/* Progress bar */}
-        <div style={{ height: '6px', background: '#daf0e8', borderRadius: '99px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: '#02A257', borderRadius: '99px', transition: 'width 0.5s ease' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', fontSize: '0.7rem', ...T.faint }}>
-          <span>Début</span>
-          <span style={{ ...T.green, fontWeight: '600' }}>{completedSessions}/{totalSessions} séances · {progress}%</span>
-          <span>Course</span>
-        </div>
-
-        {/* Confidence strip */}
-        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #daf0e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-              <span style={{ ...T.label }}>Indice de confiance</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: confStyle.text, background: confStyle.bg, border: `1px solid ${confStyle.border}`, borderRadius: '6px', padding: '0.1rem 0.5rem' }}>
-                {confidence.label} · {confidence.score}/100
-              </span>
-            </div>
-            <div style={{ height: '5px', background: '#f0f0f0', borderRadius: '99px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${confidence.score}%`, background: confStyle.bar, borderRadius: '99px', transition: 'width 0.5s ease' }} />
-            </div>
-            <div style={{ marginTop: '0.35rem', fontSize: '0.7rem', color: '#b0b3c1', fontStyle: 'italic' }}>
-              Se mettra à jour au fil de tes séances validées
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Week navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <button
-          onClick={() => setSelectedWeek(w => Math.max(0, w - 1))}
-          disabled={selectedWeek === 0}
-          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #c5e6d5', background: 'white', cursor: selectedWeek === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === 0 ? 0.3 : 1, flexShrink: 0 }}
-        >
-          <ChevronLeft size={16} color="#464754" />
-        </button>
-        <div style={{ flex: 1, display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '2px' }}>
-          {semaines.map((s, i) => (
+          {/* Gear */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
             <button
-              key={i}
-              onClick={() => setSelectedWeek(i)}
-              style={{
-                flexShrink: 0, padding: '0.3rem 0.7rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer', border: '1px solid',
-                background: i === selectedWeek ? '#02A257' : i === currentWeekIndex ? '#f0faf5' : 'white',
-                color:      i === selectedWeek ? 'white'   : i === currentWeekIndex ? '#02A257' : '#9ea0ae',
-                borderColor:i === selectedWeek ? '#02A257' : i === currentWeekIndex ? '#02A257' : '#c5e6d5',
-              }}
+              onClick={() => setMenuOpen(o => !o)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', opacity: menuOpen ? 1 : 0.4 }}
             >
-              S{i + 1}
+              <Settings size={15} color="#656779" />
             </button>
-          ))}
-        </div>
-        <button
-          onClick={() => setSelectedWeek(w => Math.min(totalWeeks - 1, w + 1))}
-          disabled={selectedWeek === totalWeeks - 1}
-          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #c5e6d5', background: 'white', cursor: selectedWeek === totalWeeks - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: selectedWeek === totalWeeks - 1 ? 0.3 : 1, flexShrink: 0 }}
-        >
-          <ChevronRight size={16} color="#464754" />
-        </button>
-      </div>
-
-      {/* Session modal */}
-      {selectedSession && (() => {
-        const { weekIndex, sessionIndex } = selectedSession
-        const s = localSemaines[weekIndex]?.seances?.[sessionIndex]
-        if (!s) return null
-        const colors = INTENSITE_COLORS[s.intensite] || INTENSITE_COLORS['modéré']
-        const done = !!s.completed
-        const { activity: strava, source: stravaSource } = getActivity(s, sessionIndex === 0 && weekIndex === 0 ? MOCK_STRAVA : null)
-        return (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(28,28,36,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(2px)', padding: '1rem' }}
-            onClick={() => setSelectedSession(null)}
-          >
-            <div
-              onClick={e => e.stopPropagation()}
-              style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '480px', padding: '1.5rem', boxShadow: '0 8px 40px rgba(28,28,36,0.2)', maxHeight: '90vh', overflowY: 'auto' }}
-            >
-
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SessionShape type={s.type} size={36} /></div>
-                  <div>
-                    <div style={{ fontWeight: '700', fontSize: '1.05rem', color: '#282830' }}>{s.type}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#9ea0ae', marginTop: '0.1rem' }}>
-                      {s.jour} · {getSessionDate(s.jour)}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: '600', padding: '0.2rem 0.6rem', borderRadius: '99px', background: colors.bg, color: colors.color, border: `1px solid ${colors.border}` }}>
-                    {s.intensite}
-                  </span>
-                  <button onClick={() => setSelectedSession(null)} style={{ border: 'none', background: '#f5f5f5', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <X size={14} color="#9ea0ae" />
+            {menuOpen && (
+              <>
+                <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
+                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 20, background: 'white', border: '1px solid #c5e6d5', borderRadius: '12px', boxShadow: '0 6px 20px rgba(40,40,48,0.1)', minWidth: '190px', overflow: 'hidden' }}>
+                  <Link href="/onboarding" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
+                    <Settings size={14} color="#9ea0ae" /> Modifier le plan
+                  </Link>
+                  <Link href="/onboarding" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
+                    <RefreshCw size={14} color="#9ea0ae" /> Nouveau plan
+                  </Link>
+                  <button onClick={() => { setMenuOpen(false); onAbandon(plan.id) }} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#dc2626', textAlign: 'left' }}>
+                    <XCircle size={14} color="#dc2626" /> Abandonner le plan
                   </button>
                 </div>
-              </div>
-
-              {/* Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: ['Footing léger', 'Récupération active'].includes(s.type) ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                {[
-                  { label: 'Distance', value: `${s.distance_km} km` },
-                  { label: 'Durée', value: `${s.duree_minutes} min` },
-                  ...(['Footing léger', 'Récupération active'].includes(s.type) ? [{ label: 'Allure cible', value: s.allure_cible || '—' }] : []),
-                ].map(({ label, value }) => (
-                  <div key={label} style={{ background: '#f8faf9', border: '1px solid #e8f4ee', borderRadius: '12px', padding: '0.75rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.3rem' }}>{label}</div>
-                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#282830' }}>{value}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Description */}
-              {s.description && (
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <p style={{ fontSize: '0.9rem', color: '#464754', lineHeight: 1.55 }}>{s.description}</p>
-                </div>
-              )}
-
-              {/* Instructions */}
-              {s.details && (
-                <div style={{ background: '#f0faf5', border: '1px solid #c5e6d5', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem' }}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#02A257', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>Instructions</div>
-                  <p style={{ fontSize: '0.82rem', color: '#464754', lineHeight: 1.55, margin: 0 }}>{s.details}</p>
-                </div>
-              )}
-
-              {/* Mark as done */}
-              {stravaSource === 'strava' ? (
-                <div style={{ width: '100%', padding: '0.85rem', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  background: '#fff1ec', border: '1px solid #fdd0b8' }}>
-                  <StravaLogo size={15} />
-                  <span style={{ fontWeight: '600', fontSize: '0.9rem', color: '#FC4C02' }}>Réalisée via Strava</span>
-                </div>
-              ) : !strava ? (
-                <button
-                  onClick={() => { toggleCompleted(weekIndex, sessionIndex) }}
-                  style={{
-                    width: '100%', padding: '0.85rem', borderRadius: '14px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.15s',
-                    background: done ? '#f0fdf4' : '#02A257',
-                    color: done ? '#16a34a' : 'white',
-                    boxShadow: done ? 'none' : '0 2px 8px rgba(2,162,87,0.3)',
-                  }}
-                >
-                  {done
-                    ? <><CheckCircle2 size={17} /> Séance réalisée — annuler</>
-                    : <><Circle size={17} /> Marquer comme réalisée</>
-                  }
-                </button>
-              ) : null}
-
-              {/* Strava section */}
-              {strava ? (
-                <div style={{ marginTop: '1rem', borderRadius: '14px', border: `1px solid ${stravaSource === 'strava' ? '#fdd0b8' : '#c5e6d5'}`, overflow: 'hidden' }}>
-                  {/* Header */}
-                  <div style={{ padding: '0.7rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: stravaSource === 'strava' ? '#FC4C02' : '#02A257' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {stravaSource === 'strava' ? <StravaLogo size={16} /> : <CheckCircle2 size={16} color="white" />}
-                      <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'white' }}>{stravaSource === 'strava' ? 'Activité synchronisée' : 'Saisie manuelle'}</span>
-                    </div>
-                    <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.8)', fontStyle: 'italic' }}>{strava.nom}</span>
-                  </div>
-                  {/* Comparatif prévu / réalisé */}
-                  <div style={{ background: stravaSource === 'strava' ? '#fff9f6' : '#f0faf5', padding: '0.85rem 1rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                      {[
-                        { label: 'Distance', prevu: `${s.distance_km} km`, reel: `${strava.distance_km} km`, better: strava.distance_km >= s.distance_km },
-                        { label: 'Durée', prevu: `${s.duree_minutes} min`, reel: `${strava.duree_minutes} min`, better: strava.duree_minutes <= s.duree_minutes },
-                        ...(strava.allure_moyenne ? [{ label: 'Allure moy.', prevu: s.allure_cible || '—', reel: fmtPaceMin(strava.allure_moyenne), better: null }] : []),
-                        ...(strava.frequence_cardiaque_moy ? [{ label: 'FC moyenne', prevu: '—', reel: `${strava.frequence_cardiaque_moy} bpm`, better: null }] : []),
-                      ].map(({ label, prevu, reel, better }) => (
-                        <div key={label} style={{ background: 'white', borderRadius: '10px', padding: '0.6rem 0.75rem', border: `1px solid ${stravaSource === 'strava' ? '#fdd0b8' : '#c5e6d5'}` }}>
-                          <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.4rem' }}>{label}</div>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: '700', fontSize: '0.9rem', color: better === null ? '#282830' : better ? '#02A257' : '#dc2626' }}>{reel}</span>
-                            {prevu !== '—' && <span style={{ fontSize: '0.7rem', color: '#b0b3c1' }}>/ {prevu} prévu</span>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {stravaSource === 'strava' && strava.strava_id && (
-                      <a
-                        href={`https://www.strava.com/activities/${strava.strava_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#FC4C02', fontWeight: '600', textDecoration: 'none' }}
-                      >
-                        <StravaLogo size={12} /> Voir sur Strava →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div style={{ marginTop: '1rem', padding: '0.85rem 1rem', borderRadius: '12px', border: '1px solid #e5e7eb', background: '#fafafa', opacity: 0.55 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <StravaLogo size={12} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: '600', color: '#464754' }}>Activité Strava associée</div>
-                      <div style={{ fontSize: '0.72rem', color: '#9ea0ae' }}>Synchronisation automatique — bientôt disponible</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )
-      })()}
-
-      {/* Week detail */}
-      <div style={{ ...T.card, overflow: 'hidden' }}>
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #daf0e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ ...T.label }}>
-              Semaine {semaine.numero}{selectedWeek === currentWeekIndex ? ' · Cette semaine' : ''}
-            </div>
-            <div style={{ fontWeight: '700', ...T.primary, marginTop: '0.15rem' }}>{semaine.theme}</div>
-            <div style={{ fontSize: '0.75rem', ...T.faint, marginTop: '0.2rem' }}>
-              {fmtDay(weekMonday)} → {fmtDay(weekSunday)}
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: '700', ...T.green, fontSize: '1.1rem' }}>{(semaine.seances || []).reduce((sum, s) => sum + (s.distance_km || 0), 0)} km</div>
-            <div style={{ fontSize: '0.75rem', ...T.faint }}>{semaine.seances?.length} séances</div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Stats rapides semaine */}
-        {(() => {
-          const seances = semaine.seances || []
-          // Mock strava sur S1/séance 0 pour démo
-          const withActivity = seances.map((se, i) => {
-            const { activity } = getActivity(se, i === 0 && selectedWeek === 0 ? MOCK_STRAVA : null)
-            return { ...se, _activity: activity }
-          })
-          const done = withActivity.filter(se => se.completed || se._activity)
-          if (done.length === 0) return null
-
-          const kmPrevus = seances.reduce((sum, se) => sum + (se.distance_km || 0), 0)
-          const kmRealises = done.reduce((sum, se) => {
-            const km = se._activity?.distance_km ?? se.distance_km ?? 0
-            return sum + km
-          }, 0)
-          const minRealises = done.reduce((sum, se) => {
-            return sum + (se._activity?.duree_minutes ?? se.duree_minutes ?? 0)
-          }, 0)
-          const h = Math.floor(minRealises / 60)
-          const m = minRealises % 60
-          const dureeStr = h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`
-
-          return (
-            <div style={{ padding: '0.75rem 1.5rem', background: '#f8fdf9', borderBottom: '1px solid #daf0e8', display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={13} color="#02A257" />
-                <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#282830' }}>{done.length}/{seances.length}</span>
-                <span style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>séances</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#282830' }}>{kmRealises.toFixed(1)} km</span>
-                <span style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>/ {kmPrevus} km</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#282830' }}>{dureeStr}</span>
-                <span style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>total</span>
-              </div>
-            </div>
-          )
-        })()}
-        <div>
-          {(semaine.seances || []).map((seance, i) => {
-            const colors = INTENSITE_COLORS[seance.intensite] || INTENSITE_COLORS['modéré']
-            const done = !!seance.completed
-            const { activity: strava, source: stravaSource } = getActivity(seance, i === 0 && selectedWeek === 0 ? MOCK_STRAVA : null)
-            const actColor = stravaSource === 'strava' ? '#FC4C02' : '#02A257'
-            const actBg    = stravaSource === 'strava' ? '#fff9f6' : '#f0faf5'
-            return (
-              <div
-                key={i}
-                onClick={() => setSelectedSession({ weekIndex: selectedWeek, sessionIndex: i, seance })}
-                style={{ padding: '1rem 1.5rem', borderBottom: i < semaine.seances.length - 1 ? '1px solid #f5f5f5' : 'none', display: 'flex', gap: '1rem', alignItems: 'flex-start', cursor: 'pointer', background: strava ? actBg : done ? '#f0faf5' : 'white', transition: 'background 0.15s' }}
-                onMouseEnter={e => { if (!strava && !done) e.currentTarget.style.background = '#fafafa' }}
-                onMouseLeave={e => { e.currentTarget.style.background = strava ? actBg : done ? '#f0faf5' : 'white' }}
-              >
-                <div style={{ width: '44px', flexShrink: 0, textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: '700', color: strava ? actColor : done ? '#02A257' : T.green.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{seance.jour?.slice(0, 3)}</div>
-                  <div style={{ marginTop: '0.1rem', opacity: done && !strava ? 0.4 : 1, display: 'flex', justifyContent: 'center' }}><SessionShape type={seance.type} size={22} /></div>
-                  <div style={{ fontSize: '0.6rem', ...T.faint, marginTop: '0.15rem', lineHeight: 1.2 }}>{getSessionDate(seance.jour)}</div>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: '600', fontSize: '0.9rem', color: '#282830' }}>{seance.type}</span>
-                    {strava ? (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', fontWeight: '600', padding: '0.15rem 0.5rem', borderRadius: '99px',
-                        background: stravaSource === 'strava' ? '#fff1ec' : '#f0fdf4',
-                        color: stravaSource === 'strava' ? '#FC4C02' : '#16a34a',
-                        border: `1px solid ${stravaSource === 'strava' ? '#fdd0b8' : '#bbf7d0'}` }}>
-                        {stravaSource === 'strava' ? <StravaLogo size={10} /> : <CheckCircle2 size={10} />}
-                        {stravaSource === 'strava' ? 'Strava' : 'Manuel'}
-                      </span>
-                    ) : !done ? (
-                      <span style={{ fontSize: '0.7rem', fontWeight: '600', padding: '0.15rem 0.5rem', borderRadius: '99px', background: colors.bg, color: colors.color, border: `1px solid ${colors.border}` }}>
-                        {seance.intensite}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: '0.7rem', fontWeight: '600', padding: '0.15rem 0.5rem', borderRadius: '99px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
-                        Réalisée ✓
-                      </span>
-                    )}
-                  </div>
-                  {strava ? (
-                    <div style={{ fontSize: '0.78rem', color: '#9ea0ae', display: 'flex', gap: '0.75rem' }}>
-                      <span style={{ color: '#464754', fontWeight: '600' }}>{strava.distance_km} km</span>
-                      <span>{strava.duree_minutes} min</span>
-                      {strava.frequence_cardiaque_moy && <span>FC {strava.frequence_cardiaque_moy} bpm</span>}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '0.82rem', color: done ? '#b0b3c1' : '#656779' }}>{seance.description}</div>
-                  )}
-                </div>
-                <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                  {strava ? (
-                    <>
-                      <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#FC4C02' }}>{strava.distance_km} km</div>
-                      <div style={{ fontSize: '0.72rem', color: '#9ea0ae', textDecoration: 'line-through' }}>{seance.distance_km} km prévu</div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ fontWeight: '700', fontSize: '0.9rem', color: done ? '#9ea0ae' : '#282830' }}>{seance.distance_km} km</div>
-                      {seance.allure_cible && !done && ['Footing léger', 'Récupération active'].includes(seance.type) && <div style={{ fontSize: '0.75rem', ...T.green, fontWeight: '600' }}>{seance.allure_cible}</div>}
-                      {seance.duree_minutes && <div style={{ fontSize: '0.72rem', ...T.faint }}>{seance.duree_minutes} min</div>}
-                    </>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ── Ajouter une activité ── */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <button
-          onClick={() => { setAddOpen(o => !o); setAddSuccess(false) }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 1rem', borderRadius: '99px', border: '1px solid #c5e6d5', background: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', color: '#656779' }}
-        >
-          <span style={{ fontSize: '1rem', lineHeight: 1, color: '#02A257' }}>+</span>
-          Ajouter une activité
-        </button>
-      </div>
-
-      {addOpen && (
-        <div onClick={() => setAddOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,28,36,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(2px)', padding: '1rem' }}>
-        <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '420px', padding: '1.5rem', boxShadow: '0 8px 40px rgba(28,28,36,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-            <div style={{ fontWeight: '700', fontSize: '1rem', color: '#282830' }}>Ajouter une activité</div>
-            <button onClick={() => setAddOpen(false)} style={{ border: 'none', background: '#f5f5f5', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={14} color="#9ea0ae" />
-            </button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ ...T.label, display: 'block', marginBottom: '0.3rem' }}>Date</label>
-              <input type="date" value={addForm.date} onChange={e => setAddForm(f => ({ ...f, date: e.target.value }))}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #c5e6d5', fontSize: '0.85rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ ...T.label, display: 'block', marginBottom: '0.3rem' }}>Type</label>
-              <select value={addForm.type_activite} onChange={e => setAddForm(f => ({ ...f, type_activite: e.target.value }))}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #c5e6d5', fontSize: '0.85rem', color: '#282830', background: 'white', boxSizing: 'border-box' }}>
-                {[['Run','🏃 Course'],['Ride','🚴 Vélo'],['Walk','🚶 Marche / Randonnée'],['Swim','🏊 Natation'],['WeightTraining','💪 Renforcement'],['Workout','💪 Workout'],['Yoga','🧘 Yoga'],['Rowing','🚣 Aviron']].map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ ...T.label, display: 'block', marginBottom: '0.3rem' }}>Distance (km)</label>
-              <input type="number" min="0" step="0.1" placeholder="ex: 8.5" value={addForm.distance_km} onChange={e => setAddForm(f => ({ ...f, distance_km: e.target.value }))}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #c5e6d5', fontSize: '0.85rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ ...T.label, display: 'block', marginBottom: '0.3rem' }}>Durée (min)</label>
-              <input type="number" min="0" placeholder="ex: 45" value={addForm.duree_minutes} onChange={e => setAddForm(f => ({ ...f, duree_minutes: e.target.value }))}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #c5e6d5', fontSize: '0.85rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ ...T.label, display: 'block', marginBottom: '0.3rem' }}>FC moyenne (bpm)</label>
-              <input type="number" min="0" placeholder="ex: 155" value={addForm.frequence_cardiaque_moy} onChange={e => setAddForm(f => ({ ...f, frequence_cardiaque_moy: e.target.value }))}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #c5e6d5', fontSize: '0.85rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ ...T.label, display: 'block', marginBottom: '0.3rem' }}>Note</label>
-              <input type="text" placeholder="ex: Sortie cool" value={addForm.note} onChange={e => setAddForm(f => ({ ...f, note: e.target.value }))}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #c5e6d5', fontSize: '0.85rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
+        {/* Zone 2 — Objectif | Confiance */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0' }}>
+          <div style={{ padding: '1rem 1.25rem', textAlign: 'center', borderRight: '1px solid #f0f0f0' }}>
+            <div style={{ ...T.label, marginBottom: '0.35rem' }}>Objectif</div>
+            <div style={{ fontSize: plan.target_time ? '1.6rem' : '1rem', fontWeight: '900', ...T.green, letterSpacing: '-0.02em' }}>
+              {plan.target_time ? formatTargetTime(plan.target_time) : '—'}
             </div>
           </div>
           <button
-            onClick={handleAddActivity}
-            disabled={addLoading || addSuccess || (!addForm.distance_km && !addForm.duree_minutes)}
-            style={{ marginTop: '1rem', width: '100%', padding: '0.75rem', borderRadius: '12px', border: 'none', cursor: addLoading || addSuccess ? 'default' : 'pointer', fontWeight: '600', fontSize: '0.88rem', transition: 'all 0.15s',
-              background: addSuccess ? '#f0fdf4' : '#02A257', color: addSuccess ? '#16a34a' : 'white', opacity: (!addForm.distance_km && !addForm.duree_minutes) ? 0.5 : 1 }}>
-            {addSuccess ? '✓ Activité enregistrée !' : addLoading ? 'Enregistrement...' : 'Enregistrer l\'activité'}
+            onClick={() => setConfOpen(true)}
+            style={{ padding: '1rem 1.25rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', width: '100%' }}
+          >
+            <div style={{ ...T.label, marginBottom: '0.35rem' }}>Confiance</div>
+            <svg width="56" height="56" style={{ display: 'block' }}>
+              <circle cx="28" cy="28" r="22" stroke="#f0f0f0" strokeWidth="5" fill="none" />
+              <circle cx="28" cy="28" r="22"
+                stroke={confStyle.bar} strokeWidth="5" fill="none"
+                strokeDasharray={2 * Math.PI * 22}
+                strokeDashoffset={2 * Math.PI * 22 * (1 - confidence.score / 100)}
+                strokeLinecap="round"
+                transform="rotate(-90 28 28)"
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+              <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fontWeight="800" fontSize="12" fill={confStyle.text}>{confidence.score}</text>
+            </svg>
+            <div style={{ fontSize: '0.7rem', fontWeight: '700', color: confStyle.text, marginTop: '0.25rem' }}>{confidence.label}</div>
+            <div style={{ fontSize: '0.62rem', color: '#b0b3c1', marginTop: '0.2rem' }}>En savoir plus →</div>
           </button>
         </div>
+
+        {/* Zone 3 — Progression + CTA */}
+        <div style={{ padding: '0.9rem 1.25rem 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', ...T.muted }}>{completedSessions}/{totalSessions} séances · {progress}%</span>
+            <span style={{ fontSize: '0.72rem', ...T.faint }}>{progress}%</span>
+          </div>
+          <div style={{ height: '5px', background: '#daf0e8', borderRadius: '99px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progress}%`, background: '#02A257', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+          </div>
+        </div>
+        <Link
+          href={`/dashboard/plan/${plan.id}`}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.75rem', borderTop: '1px solid #f0f0f0', marginTop: '0.9rem', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '600', color: '#02A257' }}
+        >
+          Afficher les séances →
+        </Link>
+
+      </div>
+
+      {/* Nouveau plan */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Link
+          href="/onboarding"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.9rem', borderRadius: '99px', border: '1px solid #c5e6d5', background: 'white', textDecoration: 'none', fontSize: '0.78rem', fontWeight: '500', color: '#9ea0ae', transition: 'all 0.15s' }}
+        >
+          + Nouveau plan
+        </Link>
+      </div>
+
+      {/* Modale confiance */}
+      {confOpen && (
+        <div onClick={() => setConfOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,28,36,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(2px)', padding: '1.25rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '420px', padding: '1.5rem', boxShadow: '0 8px 40px rgba(28,28,36,0.2)' }}>
+            {/* Titre */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '1rem', color: '#282830' }}>Indice de confiance</div>
+              <button onClick={() => setConfOpen(false)} style={{ border: 'none', background: '#f5f5f5', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#9ea0ae' }}>×</button>
+            </div>
+
+            {/* Score */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+              <svg width="64" height="64" style={{ flexShrink: 0 }}>
+                <circle cx="32" cy="32" r="26" stroke="#f0f0f0" strokeWidth="6" fill="none" />
+                <circle cx="32" cy="32" r="26"
+                  stroke={confStyle.bar} strokeWidth="6" fill="none"
+                  strokeDasharray={2 * Math.PI * 26}
+                  strokeDashoffset={2 * Math.PI * 26 * (1 - confidence.score / 100)}
+                  strokeLinecap="round"
+                  transform="rotate(-90 32 32)"
+                />
+                <text x="32" y="32" textAnchor="middle" dominantBaseline="middle" fontWeight="900" fontSize="15" fill={confStyle.text}>{confidence.score}</text>
+              </svg>
+              <div>
+                <div style={{ fontSize: '1.2rem', fontWeight: '800', color: confStyle.text }}>{confidence.label}</div>
+                <div style={{ fontSize: '0.82rem', color: '#656779', marginTop: '0.2rem' }}>Score de réussite estimé</div>
+              </div>
+            </div>
+
+            {/* Explication */}
+            <div style={{ fontSize: '0.84rem', color: '#464754', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+              L'indice de confiance évalue la faisabilité de ton objectif en croisant <strong>le délai avant la course</strong>, <strong>ton volume d'entraînement hebdomadaire</strong> et <strong>tes chronos de référence</strong>.
+            </div>
+
+            {/* Signaux */}
+            {confidence.signals?.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.1rem' }}>Facteurs détectés</div>
+                {confidence.signals.map((s, i) => {
+                  const icon = s.type === 'positive' ? '✓' : s.type === 'negative' ? '✗' : '!'
+                  const color = s.type === 'positive' ? '#02A257' : s.type === 'negative' ? '#dc2626' : '#d97706'
+                  const bg = s.type === 'positive' ? '#f0faf5' : s.type === 'negative' ? '#fef2f2' : '#fffbeb'
+                  const border = s.type === 'positive' ? '#c5e6d5' : s.type === 'negative' ? '#fecaca' : '#fde68a'
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', padding: '0.55rem 0.75rem', borderRadius: '10px', background: bg, border: `1px solid ${border}` }}>
+                      <span style={{ fontWeight: '700', fontSize: '0.75rem', color, flexShrink: 0, marginTop: '0.05rem' }}>{icon}</span>
+                      <span style={{ fontSize: '0.82rem', color: '#464754' }}>{s.text}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <button onClick={() => setConfOpen(false)} style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', border: 'none', background: '#f5f5f5', cursor: 'pointer', fontWeight: '600', fontSize: '0.88rem', color: '#464754' }}>
+              Fermer
+            </button>
+          </div>
         </div>
       )}
+
     </div>
   )
 }
@@ -846,10 +408,10 @@ function computePlanConfidence(plan) {
   }
 
   score = Math.max(5, Math.min(100, score))
-  if (score >= 75) return { score, label: 'Réaliste',       tier: 'green'  }
-  if (score >= 55) return { score, label: 'Ambitieux',      tier: 'blue'   }
-  if (score >= 35) return { score, label: 'Très ambitieux', tier: 'amber'  }
-  return              { score, label: 'Risqué',          tier: 'red'    }
+  if (score >= 75) return { score, label: 'Réaliste',       tier: 'green', signals }
+  if (score >= 55) return { score, label: 'Ambitieux',      tier: 'blue',  signals }
+  if (score >= 35) return { score, label: 'Très ambitieux', tier: 'amber', signals }
+  return              { score, label: 'Risqué',          tier: 'red',   signals }
 }
 
 const CONF_TIERS = {
