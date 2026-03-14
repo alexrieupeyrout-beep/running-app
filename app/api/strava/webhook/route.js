@@ -62,7 +62,8 @@ export async function POST(request) {
   )
   const activity = await activityResponse.json()
 
-  if (!activity.id || activity.type !== 'Run') return Response.json({ received: true })
+  const ACCEPTED_TYPES = ['Run', 'Ride', 'VirtualRide', 'Walk', 'Hike', 'Swim', 'WeightTraining', 'Yoga', 'Workout', 'EBikeRide', 'Rowing']
+  if (!activity.id || !ACCEPTED_TYPES.includes(activity.type)) return Response.json({ received: true })
 
   await supabase.from('courses').upsert({
     strava_id: activity.id,
@@ -70,6 +71,7 @@ export async function POST(request) {
     distance_km: Math.round(activity.distance / 100) / 10,
     duree_minutes: Math.round(activity.moving_time / 60),
     note: activity.name,
+    type_activite: activity.type,
     allure_moyenne: activity.average_speed ? Math.round(1000 / activity.average_speed) / 60 : null,
     frequence_cardiaque_moy: activity.average_heartrate || null,
     frequence_cardiaque_max: activity.max_heartrate || null,

@@ -15,10 +15,11 @@ export async function GET() {
     return Response.json({ erreur: activities })
   }
 
-  const runs = activities.filter(a => a.type === 'Run')
+  const ACCEPTED_TYPES = ['Run', 'Ride', 'VirtualRide', 'Walk', 'Hike', 'Swim', 'WeightTraining', 'Yoga', 'Workout', 'EBikeRide', 'Rowing']
+  const accepted = activities.filter(a => ACCEPTED_TYPES.includes(a.type))
   const errors = []
 
-  for (const activity of runs) {
+  for (const activity of accepted) {
     const detailResponse = await fetch(
       `https://www.strava.com/api/v3/activities/${activity.id}`,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -31,6 +32,7 @@ export async function GET() {
       distance_km: Math.round(activity.distance / 100) / 10,
       duree_minutes: Math.round(activity.moving_time / 60),
       note: activity.name,
+      type_activite: activity.type,
       allure_moyenne: detail.average_speed ? Math.round(1000 / detail.average_speed) / 60 : null,
       frequence_cardiaque_moy: detail.average_heartrate || null,
       frequence_cardiaque_max: detail.max_heartrate || null,
@@ -45,5 +47,5 @@ export async function GET() {
     if (error) errors.push({ activity: activity.name, error })
   }
 
-  return Response.json({ imported: runs.length, errors })
+  return Response.json({ imported: accepted.length, errors })
 }

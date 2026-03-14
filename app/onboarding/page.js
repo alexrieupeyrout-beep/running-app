@@ -357,7 +357,19 @@ export default function Onboarding() {
             .map(r => [r.distance === 'Autre' ? (r.customDistance || 'Autre') : r.distance, { time: r.duration, date: r.date }])
         ),
         goal: data.goal === 'guided' ? 'time' : data.goal,
-        targetTime: data.targetTime,
+        targetTime: data.targetTime || (data.goal === 'guided' ? (() => {
+          // Fallback : temps typique selon distance + volume si pas de Riegel
+          const dist = data.distance === 'Autres' ? null : data.distance
+          const vol = parseFloat(data.kmPerWeekCustom) || (data.kmPerWeek === '<30km' ? 20 : data.kmPerWeek === '30-60km' ? 45 : data.kmPerWeek === '>60km' ? 70 : 25)
+          const level = vol < 30 ? 'debutant' : vol <= 50 ? 'intermediaire' : 'avance'
+          const DEFAULTS = {
+            '5K':      { debutant: '35:00', intermediaire: '27:00', avance: '22:00' },
+            '10K':     { debutant: '1h15:00', intermediaire: '52:00', avance: '42:00' },
+            'Semi':    { debutant: '2h30:00', intermediaire: '1h50:00', avance: '1h30:00' },
+            'Marathon':{ debutant: '5h00:00', intermediaire: '3h45:00', avance: '3h00:00' },
+          }
+          return dist && DEFAULTS[dist] ? DEFAULTS[dist][level] : ''
+        })() : ''),
         sessionsPerWeek: data.sessionsPerWeek ?? (parseInt(data.sessionsCustom) || 3),
         preferredDays: data.preferredDays,
       }
