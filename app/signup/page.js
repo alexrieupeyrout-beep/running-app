@@ -18,9 +18,9 @@ export default function Signup() {
     <div className="min-h-screen bg-[#f0faf5] flex flex-col">
       {/* Nav */}
       <nav className="bg-white border-b border-[#c5e6d5]">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto w-full px-4 sm:px-6" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <span className="text-[#02A257] font-black text-3xl tracking-tight">VITE</span>
+            <span className="text-[#02A257] font-black text-2xl tracking-tight">VITE</span>
           </Link>
         </div>
       </nav>

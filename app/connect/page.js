@@ -5,7 +5,7 @@ export default function Connect() {
     <div className="min-h-screen bg-[#09090b] text-white flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm flex flex-col items-center gap-8 text-center">
         {/* Logo */}
-        <Link href="/" className="text-3xl font-black tracking-tight text-[#02A257] hover:opacity-75 transition-opacity">
+        <Link href="/" className="text-2xl font-black tracking-tight text-[#02A257] hover:opacity-75 transition-opacity">
           VITE
         </Link>
 

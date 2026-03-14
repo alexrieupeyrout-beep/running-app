@@ -274,13 +274,6 @@ export async function POST(request) {
     const athlete_id = tokenRow.athlete_id
     const planData = generatePlan(data)
 
-    // Archiver l'ancien plan actif
-    await supabase
-      .from('plans')
-      .update({ statut: 'abandonné' })
-      .eq('athlete_id', athlete_id)
-      .eq('statut', 'actif')
-
     const { data: plan, error: insertError } = await supabase
       .from('plans')
       .insert({

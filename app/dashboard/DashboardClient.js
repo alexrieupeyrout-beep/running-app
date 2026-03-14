@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Settings, RefreshCw, XCircle } from 'lucide-react'
+import { Settings, XCircle, PauseCircle } from 'lucide-react'
 
 const INTENSITE_COLORS = {
   'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
@@ -134,8 +134,22 @@ const T = {
 }
 
 function PlanSection({ plan, onAbandon }) {
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [confOpen, setConfOpen] = useState(false)
+  const [pauseLoading, setPauseLoading] = useState(false)
+  const isPaused = plan.statut === 'en_pause'
+
+  const handlePause = async () => {
+    setPauseLoading(true)
+    await fetch('/api/plan/pause', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: plan.id, action: isPaused ? 'reprendre' : 'pause' }),
+    })
+    setPauseLoading(false)
+    router.refresh()
+  }
 
   const semaines = plan.semaines || []
   const today = new Date()
@@ -147,114 +161,93 @@ function PlanSection({ plan, onAbandon }) {
   const confidence = computePlanConfidence(plan)
   const confStyle = CONF_TIERS[confidence.tier]
 
-  // Jauge circulaire
-  const r = 34
-  const circ = 2 * Math.PI * r
-  const dash = circ * (confidence.score / 100)
+  const currentWeek = plan.created_at ? Math.min(Math.ceil((today - new Date(plan.created_at)) / (1000 * 60 * 60 * 24 * 7)) + 1, semaines.length) : 1
+  const totalWeeks = semaines.length
+  const maxVolume = semaines.length > 0 ? Math.max(...semaines.map(s => s.volume_km || 0)) : 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Plan recap card */}
-      <div style={{ ...T.card, overflow: 'hidden' }}>
+      <div style={{ ...T.card }}>
 
-        {/* Zone 1 — En-tête */}
-        <div style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
-          <div>
-            <div style={{ fontSize: '1.05rem', fontWeight: '700', ...T.primary }}>
-              {plan.distance}{plan.race_name ? ` — ${plan.race_name}` : ''}
-            </div>
-            {raceDate && (
-              <div style={{ fontSize: '0.78rem', ...T.muted, marginTop: '0.2rem' }}>
-                📅 {raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                {weeksLeft !== null && weeksLeft > 0 && <span style={{ marginLeft: '0.4rem', ...T.green, fontWeight: '600' }}>· J-{weeksLeft * 7}</span>}
+        <div style={{ padding: '1.4rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+
+          {/* Ligne 1 — Titre + gear */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.2rem' }}>Votre plan</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '1rem', fontWeight: '800', ...T.primary }}>
+                  {plan.race_name ? `${plan.distance} — ${plan.race_name}` : plan.distance}
+                </span>
+                {isPaused && (
+                  <span style={{ fontSize: '0.68rem', fontWeight: '700', background: '#fffbeb', color: '#d97706', border: '1.5px solid #fde68a', borderRadius: '99px', padding: '0.1rem 0.5rem' }}>En pause</span>
+                )}
+                {raceDate && <span style={{ fontSize: '0.78rem', color: '#b0b3c1' }}>{raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>}
               </div>
-            )}
-          </div>
-          {/* Gear */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button
-              onClick={() => setMenuOpen(o => !o)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', opacity: menuOpen ? 1 : 0.4 }}
-            >
-              <Settings size={15} color="#656779" />
-            </button>
-            {menuOpen && (
-              <>
-                <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
-                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 20, background: 'white', border: '1px solid #c5e6d5', borderRadius: '12px', boxShadow: '0 6px 20px rgba(40,40,48,0.1)', minWidth: '190px', overflow: 'hidden' }}>
-                  <Link href="/onboarding" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
-                    <Settings size={14} color="#9ea0ae" /> Modifier le plan
-                  </Link>
-                  <Link href="/onboarding" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
-                    <RefreshCw size={14} color="#9ea0ae" /> Nouveau plan
-                  </Link>
-                  <button onClick={() => { setMenuOpen(false); onAbandon(plan.id) }} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#dc2626', textAlign: 'left' }}>
-                    <XCircle size={14} color="#dc2626" /> Abandonner le plan
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Zone 2 — Objectif | Confiance */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0' }}>
-          <div style={{ padding: '1rem 1.25rem', textAlign: 'center', borderRight: '1px solid #f0f0f0' }}>
-            <div style={{ ...T.label, marginBottom: '0.35rem' }}>Objectif</div>
-            <div style={{ fontSize: plan.target_time ? '1.6rem' : '1rem', fontWeight: '900', ...T.green, letterSpacing: '-0.02em' }}>
-              {plan.target_time ? formatTargetTime(plan.target_time) : '—'}
+            </div>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', width: '28px', height: '28px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+                {[0,1,2].map(i => <span key={i} style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#c0c2cc', display: 'inline-block' }} />)}
+              </button>
+              {menuOpen && (
+                <>
+                  <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
+                  <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 20, background: 'white', border: '1px solid #c5e6d5', borderRadius: '12px', boxShadow: '0 6px 20px rgba(40,40,48,0.1)', minWidth: '190px', overflow: 'hidden' }}>
+                    <Link href="/onboarding" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
+                      <Settings size={14} color="#9ea0ae" /> Modifier le plan
+                    </Link>
+                    <button onClick={() => { setMenuOpen(false); handlePause() }} disabled={pauseLoading} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#282830', textAlign: 'left', borderBottom: '1px solid #f0f0f0' }}>
+                      <PauseCircle size={14} color="#9ea0ae" /> {isPaused ? 'Reprendre le plan' : 'Mettre en pause'}
+                    </button>
+                    <button onClick={() => { setMenuOpen(false); onAbandon(plan.id) }} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#dc2626', textAlign: 'left' }}>
+                      <XCircle size={14} color="#dc2626" /> Abandonner le plan
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-          <button
-            onClick={() => setConfOpen(true)}
-            style={{ padding: '1rem 1.25rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', width: '100%' }}
-          >
-            <div style={{ ...T.label, marginBottom: '0.35rem' }}>Confiance</div>
-            <svg width="56" height="56" style={{ display: 'block' }}>
-              <circle cx="28" cy="28" r="22" stroke="#f0f0f0" strokeWidth="5" fill="none" />
-              <circle cx="28" cy="28" r="22"
-                stroke={confStyle.bar} strokeWidth="5" fill="none"
-                strokeDasharray={2 * Math.PI * 22}
-                strokeDashoffset={2 * Math.PI * 22 * (1 - confidence.score / 100)}
-                strokeLinecap="round"
-                transform="rotate(-90 28 28)"
-                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-              />
-              <text x="28" y="28" textAnchor="middle" dominantBaseline="middle" fontWeight="800" fontSize="12" fill={confStyle.text}>{confidence.score}</text>
-            </svg>
-            <div style={{ fontSize: '0.7rem', fontWeight: '700', color: confStyle.text, marginTop: '0.25rem' }}>{confidence.label}</div>
-            <div style={{ fontSize: '0.62rem', color: '#b0b3c1', marginTop: '0.2rem' }}>En savoir plus →</div>
-          </button>
-        </div>
 
-        {/* Zone 3 — Progression + CTA */}
-        <div style={{ padding: '0.9rem 1.25rem 0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', ...T.muted }}>{completedSessions}/{totalSessions} séances · {progress}%</span>
-            <span style={{ fontSize: '0.72rem', ...T.faint }}>{progress}%</span>
+          {/* Ligne 2 — Progress bar + J- */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ flex: 1, height: '6px', background: '#daf0e8', borderRadius: '99px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: '#02A257', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+            </div>
+            {weeksLeft !== null && weeksLeft > 0 && (
+              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#02A257', flexShrink: 0 }}>J-{weeksLeft * 7}</span>
+            )}
           </div>
-          <div style={{ height: '5px', background: '#daf0e8', borderRadius: '99px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: '#02A257', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+
+          {/* Ligne 3 — Stats */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              {[
+                { label: 'Semaines', value: `${currentWeek}/${totalWeeks}` },
+                { label: 'Séances', value: `${completedSessions}/${totalSessions}` },
+              ].map(s => (
+                <div key={s.label}>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#282830', marginTop: '0.1rem' }}>{s.value}</div>
+                </div>
+              ))}
+              <button onClick={() => setConfOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
+                <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Confiance</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.1rem' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: confStyle.bar, display: 'inline-block', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: confStyle.text }}>{confidence.label}</span>
+                </div>
+              </button>
+            </div>
+            <Link href={`/dashboard/plan/${plan.id}`} style={{ fontSize: '0.78rem', fontWeight: '600', color: '#02A257', textDecoration: 'none' }}>
+              Voir les séances →
+            </Link>
           </div>
+
         </div>
-        <Link
-          href={`/dashboard/plan/${plan.id}`}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.75rem', borderTop: '1px solid #f0f0f0', marginTop: '0.9rem', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '600', color: '#02A257' }}
-        >
-          Afficher les séances →
-        </Link>
 
       </div>
 
-      {/* Nouveau plan */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Link
-          href="/onboarding"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.9rem', borderRadius: '99px', border: '1px solid #c5e6d5', background: 'white', textDecoration: 'none', fontSize: '0.78rem', fontWeight: '500', color: '#9ea0ae', transition: 'all 0.15s' }}
-        >
-          + Nouveau plan
-        </Link>
-      </div>
 
       {/* Modale confiance */}
       {confOpen && (
@@ -448,10 +441,11 @@ const formatAllure = (allure) => {
   return `${min}'${sec.toString().padStart(2, '0')}"`
 }
 
-export default function DashboardClient({ courses, plan, stravaConnected }) {
+export default function DashboardClient({ courses, plans, stravaConnected }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'plan' ? 'plan' : 'dashboard')
+  const [selectedPlanIdx, setSelectedPlanIdx] = useState(0)
   const [profilOpen, setProfilOpen] = useState(false)
   const [profilEdit, setProfilEdit] = useState(false)
   const [profilData, setProfilData] = useState({ prenom: '', nom: '', dob: '', ville: '', sports: [] })
@@ -555,7 +549,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
             {/* Logo */}
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0, textDecoration: 'none' }}>
-              <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1.5rem', letterSpacing: '-0.01em' }}>VITE</span>
+              <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1.35rem', letterSpacing: '-0.01em' }}>VITE</span>
             </Link>
 
             {/* Tabs */}
@@ -876,7 +870,32 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
         {/* ── Tab: Plan ── */}
         {activeTab === 'plan' && (
-          plan ? <PlanSection plan={plan} onAbandon={setConfirmAbandon} /> : (
+          plans.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {plans.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {plans.map((p, i) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlanIdx(i)}
+                      style={{
+                        padding: '0.4rem 0.9rem', borderRadius: '10px', border: `1.5px solid ${selectedPlanIdx === i ? '#02A257' : '#c5e6d5'}`,
+                        background: selectedPlanIdx === i ? '#02A257' : 'white', color: selectedPlanIdx === i ? 'white' : '#656779',
+                        fontWeight: selectedPlanIdx === i ? '600' : '400', fontSize: '0.82rem', cursor: 'pointer',
+                      }}
+                    >
+                      {p.distance}{p.race_name ? ` · ${p.race_name}` : ''} {i === 0 ? '(actif)' : ''}
+                    </button>
+                  ))}
+                  <div style={{ flex: 1 }} />
+                  <Link href="/onboarding" style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', textDecoration: 'none' }}>
+                    + Nouveau plan
+                  </Link>
+                </div>
+              )}
+              <PlanSection plan={plans[selectedPlanIdx]} onAbandon={setConfirmAbandon} />
+            </div>
+          ) : (
             <div style={{ ...T.card, padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
