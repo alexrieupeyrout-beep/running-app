@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import Script from 'next/script'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Settings, RefreshCw, XCircle } from 'lucide-react'
 
@@ -452,6 +453,23 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'plan' ? 'plan' : 'dashboard')
   const [profilOpen, setProfilOpen] = useState(false)
+  const [profilEdit, setProfilEdit] = useState(false)
+  const [profilData, setProfilData] = useState({ prenom: '', nom: '', dob: '', ville: '', sports: [] })
+  const SPORTS = ['Course à pied', 'Trail', 'Vélo', 'Natation', 'Triathlon', 'Marche / Rando', 'Renforcement']
+  const toggleSport = (s) => setProfilData(p => ({ ...p, sports: p.sports.includes(s) ? p.sports.filter(x => x !== s) : [...p.sports, s] }))
+  const [rps, setRps] = useState([])
+  const [rpForm, setRpForm] = useState({ distance: '10K', date: '', chrono: '' })
+  const [rpAddOpen, setRpAddOpen] = useState(false)
+  const RP_DISTANCES = ['5K', '10K', '15K', 'Semi-marathon', 'Marathon', '50K', '100K', 'Autre']
+  const addRp = () => {
+    if (!rpForm.chrono) return
+    setRps(prev => {
+      const filtered = prev.filter(r => r.distance !== rpForm.distance)
+      return [...filtered, { ...rpForm }].sort((a, b) => RP_DISTANCES.indexOf(a.distance) - RP_DISTANCES.indexOf(b.distance))
+    })
+    setRpAddOpen(false)
+    setRpForm({ distance: '10K', date: '', chrono: '' })
+  }
   const [periode, setPeriode] = useState('tout')
   const [distanceMin, setDistanceMin] = useState('')
   const [distanceMax, setDistanceMax] = useState('')
@@ -525,6 +543,7 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0faf5', fontFamily: 'system-ui, sans-serif' }}>
+      <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
 
       {/* ── Sticky header ────────────────────────────── */}
       <div style={{ position: 'sticky', top: 0, background: 'white', borderBottom: '1px solid #c5e6d5', zIndex: 10 }}>
@@ -546,9 +565,9 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
             </div>
 
             {/* Profile */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{ flexShrink: 0 }}>
               <button
-                onClick={() => setProfilOpen(o => !o)}
+                onClick={() => setProfilOpen(true)}
                 style={{ width: '34px', height: '34px', borderRadius: '50%', border: `2px solid ${stravaConnected ? '#02A257' : '#c5e6d5'}`, background: '#f0faf5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#02A257" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -556,34 +575,204 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                 </svg>
               </button>
+            </div>
 
-              {profilOpen && (
-                <>
-                  <div onClick={() => setProfilOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
-                  <div style={{ position: 'absolute', top: '42px', right: 0, zIndex: 20, ...T.card, padding: '1rem 1.1rem', minWidth: '230px', boxShadow: '0 8px 24px rgba(40,40,48,0.1)' }}>
-                    <div style={{ ...T.label, marginBottom: '0.75rem' }}>Tracker connecté</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+            {/* Profil modal */}
+            {profilOpen && (() => {
+              return (
+                <div onClick={() => setProfilOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,28,36,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(2px)', padding: '1rem' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '380px', boxShadow: '0 8px 40px rgba(28,28,36,0.2)', overflow: 'hidden' }}>
+
+                    {/* Header */}
+                    <div style={{ background: '#f0faf5', padding: '1.75rem 1.5rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid #e8f5ee' }}>
+                      <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#02A257', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="8" r="4"/>
+                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                        </svg>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.88rem', fontWeight: '600', ...T.primary }}>Strava</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: '500', color: stravaConnected ? '#16a34a' : '#9ea0ae' }}>
-                          {stravaConnected ? '● Synchronisé' : '○ Non connecté'}
+                        <div style={{ fontWeight: '700', fontSize: '1rem', color: '#282830' }}>Mon profil</div>
+                      </div>
+                      <button onClick={() => setProfilOpen(false)} style={{ border: 'none', background: 'white', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <XCircle size={18} color="#c0c2cc" />
+                      </button>
+                    </div>
+
+                    <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '70vh', overflowY: 'auto' }}>
+
+                      {/* Profil */}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                          <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Profil</div>
+                          <button
+                            onClick={() => setProfilEdit(e => !e)}
+                            style={{ fontSize: '0.7rem', fontWeight: '600', color: profilEdit ? '#02A257' : '#9ea0ae', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          >
+                            {profilEdit ? 'Sauvegarder' : 'Modifier'}
+                          </button>
+                        </div>
+
+                        {profilEdit ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                              {[['prenom', 'Prénom', 'ex: Thomas'], ['nom', 'Nom', 'ex: Martin']].map(([key, label, ph]) => (
+                                <div key={key}>
+                                  <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>{label}</div>
+                                  <input
+                                    type="text" placeholder={ph} value={profilData[key]}
+                                    onChange={e => setProfilData(p => ({ ...p, [key]: e.target.value }))}
+                                    style={{ width: '100%', padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: 'white', boxSizing: 'border-box' }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Date de naissance</div>
+                                <input
+                                  type="date" value={profilData.dob}
+                                  onChange={e => setProfilData(p => ({ ...p, dob: e.target.value }))}
+                                  style={{ width: '100%', padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: 'white', boxSizing: 'border-box' }}
+                                />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Ville</div>
+                                <input
+                                  type="text" placeholder="ex: Paris" value={profilData.ville}
+                                  onChange={e => setProfilData(p => ({ ...p, ville: e.target.value }))}
+                                  style={{ width: '100%', padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: 'white', boxSizing: 'border-box' }}
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.4rem' }}>Sports pratiqués</div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                                {SPORTS.map(s => (
+                                  <button
+                                    key={s}
+                                    onClick={() => toggleSport(s)}
+                                    style={{ padding: '0.3rem 0.65rem', borderRadius: '99px', fontSize: '0.73rem', fontWeight: '600', cursor: 'pointer', border: '1.5px solid', transition: 'all 0.12s',
+                                      background: profilData.sports.includes(s) ? '#02A257' : 'white',
+                                      color: profilData.sports.includes(s) ? 'white' : '#9ea0ae',
+                                      borderColor: profilData.sports.includes(s) ? '#02A257' : '#e8e8e8',
+                                    }}
+                                  >{s}</button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ borderRadius: '14px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+                            {[
+                              { label: 'Prénom', value: profilData.prenom },
+                              { label: 'Nom', value: profilData.nom },
+                              { label: 'Date de naissance', value: profilData.dob ? new Date(profilData.dob).toLocaleDateString('fr-FR') : null },
+                              { label: 'Ville', value: profilData.ville },
+                              { label: 'Sports', value: profilData.sports.length > 0 ? profilData.sports.join(', ') : null },
+                            ].map(({ label, value }, i, arr) => (
+                              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.65rem 1rem', background: i % 2 === 0 ? '#fafafa' : 'white', borderBottom: i < arr.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
+                                <span style={{ fontSize: '0.78rem', color: '#9ea0ae', fontWeight: '500' }}>{label}</span>
+                                <span style={{ fontSize: '0.82rem', color: value ? '#282830' : '#d0d2dc', fontWeight: value ? '600' : '400', maxWidth: '180px', textAlign: 'right' }}>{value || '—'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mes RPs */}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                          <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Mes RPs</div>
+                          <button onClick={() => setRpAddOpen(o => !o)} style={{ fontSize: '0.7rem', fontWeight: '600', color: '#02A257', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                            + Ajouter
+                          </button>
+                        </div>
+
+                        {rpAddOpen && (
+                          <div style={{ background: '#f7f7f8', borderRadius: '12px', padding: '0.85rem', marginBottom: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div>
+                              <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Distance</div>
+                              <select value={rpForm.distance} onChange={e => setRpForm(f => ({ ...f, distance: e.target.value }))}
+                                style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '8px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: 'white', boxSizing: 'border-box' }}>
+                                {RP_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                              </select>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Chrono</div>
+                                <input type="text" placeholder="ex: 0:45:30" value={rpForm.chrono} onChange={e => setRpForm(f => ({ ...f, chrono: e.target.value }))}
+                                  style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '8px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>Date</div>
+                                <input type="date" value={rpForm.date} max={new Date().toISOString().split('T')[0]} onChange={e => setRpForm(f => ({ ...f, date: e.target.value }))}
+                                  style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '8px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: 'white', boxSizing: 'border-box' }} />
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.1rem' }}>
+                              <button onClick={() => setRpAddOpen(false)} style={{ flex: 1, padding: '0.45rem', borderRadius: '8px', border: '1px solid #e0e0e0', background: 'white', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '500', color: '#656779' }}>Annuler</button>
+                              <button onClick={addRp} disabled={!rpForm.chrono} style={{ flex: 1, padding: '0.45rem', borderRadius: '8px', border: 'none', background: rpForm.chrono ? '#02A257' : '#e0e0e0', cursor: rpForm.chrono ? 'pointer' : 'default', fontSize: '0.78rem', fontWeight: '600', color: 'white' }}>Enregistrer</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {rps.length === 0 && !rpAddOpen ? (
+                          <div style={{ padding: '1rem', borderRadius: '12px', border: '1px dashed #e0e0e0', textAlign: 'center', fontSize: '0.78rem', color: '#c0c2cc' }}>
+                            Aucun RP enregistré pour le moment.
+                          </div>
+                        ) : (
+                          <div style={{ borderRadius: '14px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+                            {rps.map(({ distance, chrono, date }, i) => (
+                              <div key={distance} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.65rem 1rem', background: i % 2 === 0 ? '#fafafa' : 'white', borderBottom: i < rps.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: '#282830' }}>{distance}</span>
+                                  {date && <span style={{ fontSize: '0.68rem', color: '#b0b3c1' }}>{new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</span>}
+                                </div>
+                                <span style={{ fontSize: '0.88rem', fontWeight: '800', color: '#02A257' }}>{chrono}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tracker */}
+                      <div>
+                        <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Tracker connecté</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', borderRadius: '14px', border: '1px solid #f0f0f0', background: '#fafafa' }}>
+                          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.88rem', fontWeight: '600', color: '#282830' }}>Strava</div>
+                            <div style={{ fontSize: '0.72rem', fontWeight: '500', color: stravaConnected ? '#16a34a' : '#9ea0ae' }}>
+                              {stravaConnected ? '● Synchronisé' : '○ Non connecté'}
+                            </div>
+                          </div>
+                          {stravaConnected ? (
+                            <span style={{ fontSize: '0.7rem', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.2rem 0.55rem', fontWeight: '600' }}>Actif</span>
+                          ) : (
+                            <a href="/api/auth/strava" style={{ fontSize: '0.75rem', fontWeight: '600', color: 'white', textDecoration: 'none', background: '#FC4C02', padding: '0.35rem 0.7rem', borderRadius: '8px' }}>
+                              Connecter
+                            </a>
+                          )}
                         </div>
                       </div>
-                      {stravaConnected ? (
-                        <span style={{ fontSize: '0.7rem', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.2rem 0.55rem', fontWeight: '600' }}>Actif</span>
-                      ) : (
-                        <a href="/api/auth/strava" style={{ fontSize: '0.75rem', fontWeight: '600', color: 'white', textDecoration: 'none', background: '#FC4C02', padding: '0.3rem 0.65rem', borderRadius: '8px' }}>
-                          Connecter
-                        </a>
-                      )}
+
+                      {/* Compte — bientôt */}
+                      <div>
+                        <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Compte</div>
+                        <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', border: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 0.5 }}>
+                          <div style={{ fontSize: '0.85rem', color: '#9ea0ae' }}>Email / mot de passe</div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: '600', color: '#b0b3c1', background: '#f0f0f0', padding: '0.15rem 0.5rem', borderRadius: '6px' }}>Bientôt</span>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
-                </>
-              )}
-            </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
       </div>
@@ -597,10 +786,22 @@ export default function DashboardClient({ courses, plan, stravaConnected }) {
 
             {/* Overlay "En cours de spec" */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)', borderRadius: '16px' }}>
-              <div style={{ background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.5rem 2.5rem', textAlign: 'center', boxShadow: '0 4px 24px rgba(40,40,48,0.1)' }}>
-                <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>🛠️</div>
-                <div style={{ fontWeight: '700', color: '#282830', fontSize: '1rem', marginBottom: '0.3rem' }}>En cours de spec</div>
-                <div style={{ fontSize: '0.82rem', color: '#9ea0ae' }}>Cette section arrive bientôt.</div>
+              <div style={{ background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.5rem 2rem', textAlign: 'center', boxShadow: '0 4px 24px rgba(40,40,48,0.1)', maxWidth: '320px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'white', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                    <svg width="30" height="30" viewBox="0 0 52 52" fill="none">
+                      <rect x="4" y="14" width="44" height="24" rx="12" stroke="#02A257" strokeWidth="5" fill="none"/>
+                    </svg>
+                  </div>
+                </div>
+                <div style={{ fontWeight: '700', color: '#282830', fontSize: '1rem', marginBottom: '0.4rem' }}>En train de courir !</div>
+                <div style={{ fontSize: '0.82rem', color: '#9ea0ae', lineHeight: 1.55, marginBottom: '1.1rem' }}>L'équipe produit bosse d'arrache pied sur la discovery, si tu as des idées, n'hésite pas ! Penses-y en courant !</div>
+                <button
+                  onClick={() => window.Tally?.openPopup('5B2X2Z', { layout: 'modal', width: 600, autoClose: 3000 })}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.1rem', borderRadius: '10px', background: '#02A257', color: 'white', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+                >
+                  J'ai plein d'idées →
+                </button>
               </div>
             </div>
 
