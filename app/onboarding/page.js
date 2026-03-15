@@ -415,6 +415,14 @@ export default function Onboarding() {
       })
       const json = await res.json()
       if (json.success) {
+        const hasAdvanced = Object.values(vitePlusData).some(v => v !== '' && v !== null)
+        if (hasAdvanced) {
+          fetch('/api/profile/advanced', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(vitePlusData),
+          }).catch(() => {})
+        }
         router.push('/dashboard?tab=plan')
       } else {
         setGenerateError(json.error || 'Une erreur est survenue')

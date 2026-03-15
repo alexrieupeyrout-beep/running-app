@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -448,6 +448,16 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [profilOpen, setProfilOpen] = useState(false)
   const [profilEdit, setProfilEdit] = useState(false)
   const [profilData, setProfilData] = useState({ prenom: '', nom: '', dob: '', ville: '', sports: [] })
+  const [advancedProfile, setAdvancedProfile] = useState({})
+  const [advancedEdit, setAdvancedEdit] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/profile/advanced')
+      .then(r => r.json())
+      .then(d => { if (d.advanced_profile) setAdvancedProfile(d.advanced_profile) })
+      .catch(() => {})
+  }, [])
   const SPORTS = ['Course à pied', 'Trail', 'Vélo', 'Natation', 'Triathlon', 'Marche / Rando', 'Renforcement']
   const toggleSport = (s) => setProfilData(p => ({ ...p, sports: p.sports.includes(s) ? p.sports.filter(x => x !== s) : [...p.sports, s] }))
   const [profilIcon, setProfilIcon] = useState(null)
@@ -762,6 +772,89 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                             ))}
                           </div>
                         )}
+                      </div>
+
+                      {/* Mode +VITE */}
+                      <div>
+                        <button
+                          onClick={() => setAdvancedOpen(o => !o)}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: advancedOpen ? '0.6rem' : 0 }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Mode +VITE</span>
+                            <span style={{ fontSize: '0.6rem', fontWeight: '600', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', borderRadius: '6px', padding: '0.1rem 0.4rem' }}>Avancé</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {advancedOpen && (
+                              <button
+                                onClick={e => { e.stopPropagation(); fetch('/api/profile/advanced', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(advancedProfile) }); setAdvancedEdit(false) }}
+                                style={{ fontSize: '0.7rem', fontWeight: '600', color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                              >
+                                {advancedEdit ? 'Sauvegarder' : <span onClick={e => { e.stopPropagation(); setAdvancedEdit(v => !v) }} style={{ color: '#9ea0ae' }}>Modifier</span>}
+                              </button>
+                            )}
+                            <span style={{ fontSize: '0.65rem', color: '#b0b3c1', display: 'inline-block', transform: advancedOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+                          </div>
+                        </button>
+                        {advancedOpen && (() => {
+                          const ADVANCED_FIELDS = [
+                            { section: 'Cardiaque', fields: [
+                              { key: 'fcMax', label: 'FC Max', unit: 'bpm' },
+                              { key: 'fcRepos', label: 'FC Repos', unit: 'bpm' },
+                              { key: 'vfc', label: 'VFC', unit: 'ms' },
+                              { key: 'vo2max', label: 'VO2max', unit: 'ml/kg/min' },
+                              { key: 'spo2', label: 'SpO2', unit: '%' },
+                            ]},
+                            { section: 'Cyclisme', fields: [
+                              { key: 'ftpVelo', label: 'FTP Vélo', unit: 'W' },
+                            ]},
+                            { section: 'Morphologie', fields: [
+                              { key: 'poids', label: 'Poids', unit: 'kg' },
+                              { key: 'taille', label: 'Taille', unit: 'cm' },
+                              { key: 'sexe', label: 'Genre', unit: '' },
+                            ]},
+                            { section: 'Chaussures', fields: [
+                              { key: 'chaussureMarque', label: 'Marque', unit: '' },
+                              { key: 'chaussuresModele', label: 'Modèle', unit: '' },
+                            ]},
+                          ]
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                              {ADVANCED_FIELDS.map(({ section, fields }) => (
+                                <div key={section}>
+                                  <div style={{ fontSize: '0.6rem', fontWeight: '700', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{section}</div>
+                                  <div style={{ borderRadius: '12px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+                                    {fields.map(({ key, label, unit }, i) => (
+                                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 1rem', background: i % 2 === 0 ? '#fafafa' : 'white', borderBottom: i < fields.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
+                                        <span style={{ fontSize: '0.78rem', color: '#9ea0ae', fontWeight: '500' }}>{label}</span>
+                                        {advancedEdit ? (
+                                          <input
+                                            type={['chaussureMarque', 'chaussuresModele', 'sexe'].includes(key) ? 'text' : 'number'}
+                                            value={advancedProfile[key] || ''}
+                                            onChange={e => setAdvancedProfile(p => ({ ...p, [key]: e.target.value }))}
+                                            style={{ width: '100px', padding: '0.3rem 0.5rem', borderRadius: '8px', border: '1.5px solid #ddd6fe', fontSize: '0.82rem', color: '#282830', textAlign: 'right', background: 'white', boxSizing: 'border-box' }}
+                                          />
+                                        ) : (
+                                          <span style={{ fontSize: '0.82rem', fontWeight: '600', color: advancedProfile[key] ? '#282830' : '#d0d2dc' }}>
+                                            {advancedProfile[key] ? `${advancedProfile[key]}${unit ? ' ' + unit : ''}` : '—'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                              {advancedEdit && (
+                                <button
+                                  onClick={() => { fetch('/api/profile/advanced', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(advancedProfile) }); setAdvancedEdit(false) }}
+                                  style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', background: '#7c3aed', color: 'white', border: 'none', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer' }}
+                                >
+                                  Sauvegarder
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </div>
 
                       {/* Tracker */}
