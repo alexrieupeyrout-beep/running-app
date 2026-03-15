@@ -67,21 +67,26 @@ export default function Signup() {
       </nav>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm flex flex-col gap-5">
 
           {/* Header */}
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-md border border-[#c5e6d5]">
-                <svg width="42" height="42" viewBox="0 0 52 52" fill="none">
+          <div className="text-center" style={{ position: 'relative' }}>
+            {/* Cercle décoratif flou */}
+            <div style={{ position: 'absolute', top: '-20px', left: '50%', transform: 'translateX(-50%)', width: '200px', height: '200px', borderRadius: '50%', background: '#02A257', opacity: 0.06, filter: 'blur(40px)', pointerEvents: 'none' }} />
+            <div className="flex justify-center mb-5">
+              <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center shadow-lg border border-[#c5e6d5]">
+                <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
                   <rect x="4" y="14" width="44" height="24" rx="12" stroke="#02A257" strokeWidth="5" fill="none"/>
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-[#282830] mb-2">Rejoins VITE</h1>
-            <p className="text-[#9ea0ae] text-sm leading-relaxed">
-              Ton prochain objectif mérite un vrai plan.<br/>Analyse, progresse, performe.
+            <h1 style={{ fontSize: '2rem', fontWeight: '900', color: '#282830', margin: '0 0 0.5rem', letterSpacing: '-0.02em' }}>
+              Rejoins <span style={{ color: '#02A257' }}>VITE</span>
+            </h1>
+            <p style={{ color: '#9ea0ae', fontSize: '0.9rem', lineHeight: '1.6', margin: 0 }}>
+              Ton prochain objectif mérite un vrai plan.<br/>
+              <strong style={{ color: '#282830' }}>Analyse, progresse, performe.</strong>
             </p>
           </div>
 
@@ -120,8 +125,9 @@ export default function Signup() {
             </div>
           ) : (
             <form onSubmit={handleMagicLink} style={{
-              background: 'white', border: '1.5px solid #e8e8e8', borderRadius: '20px',
+              background: 'white', border: '1.5px solid #e8e8e8', borderRadius: '24px',
               padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem',
+              boxShadow: '0 4px 24px rgba(2, 162, 87, 0.08)',
             }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>
@@ -147,22 +153,23 @@ export default function Signup() {
 
               <button
                 type="submit"
-                disabled={loading || !email}
+                disabled={loading}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  padding: '0.85rem', borderRadius: '12px',
-                  background: loading || !email ? '#c5e6d5' : '#02A257',
-                  color: 'white', fontWeight: '700', fontSize: '0.88rem',
-                  border: 'none', cursor: loading || !email ? 'not-allowed' : 'pointer',
-                  transition: 'background 0.15s',
+                  padding: '0.95rem', borderRadius: '14px',
+                  background: loading ? '#c5e6d5' : '#02A257',
+                  color: 'white', fontWeight: '800', fontSize: '0.92rem',
+                  border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.15s', letterSpacing: '-0.01em',
+                  boxShadow: loading ? 'none' : '0 4px 14px rgba(2,162,87,0.35)',
                 }}
               >
                 <Mail size={15} />
                 {loading ? 'Envoi en cours…' : 'Recevoir mon lien de connexion'}
               </button>
 
-              <p style={{ fontSize: '0.72rem', color: '#c0c2cc', textAlign: 'center', margin: 0 }}>
-                Pas de mot de passe. Un lien suffit.
+              <p style={{ fontSize: '0.78rem', color: '#02A257', textAlign: 'center', margin: 0, fontWeight: '600' }}>
+                ✦ Pas de mot de passe. Un lien suffit.
               </p>
             </form>
           )}
