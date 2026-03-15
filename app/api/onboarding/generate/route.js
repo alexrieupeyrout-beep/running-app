@@ -134,6 +134,10 @@ function generatePlan(data) {
       : sessions
     const weekDays = days.slice(0, weekSessions)
 
+    // ── Jours disponibles pour cross-training ──
+    const ALL_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+    const availableDays = ALL_DAYS.filter(d => !weekDays.includes(d))
+
     // ── Séances ──
     const seances = []
     for (let s = 0; s < weekSessions; s++) {
@@ -211,6 +215,67 @@ function generatePlan(data) {
         details,
       })
     }
+
+    // ── Renforcement musculaire ──
+    const addRenfo = (level === 'intermediaire' || level === 'avance')
+      && (phase === 'fondation' || phase === 'developpement')
+      && !isTaperW && availableDays.length > 0
+    if (addRenfo) {
+      const jourRenfo = availableDays[0]
+      const renfoVariants = [
+        { description: 'Gainage et mobilité',      details: '3×1 min gainage planche, 3×20 squats, 3×15 fentes, étirements dynamiques 10 min' },
+        { description: 'Renforcement bas du corps', details: '4×12 squats, 3×10 fentes bulgares, 3×15 mollets, 3×1 min pont fessier' },
+        { description: 'Circuit fonctionnel',       details: '3 circuits : 10 squats sautés, 10 fentes, 20 montées de genoux, 15 soulevés de bassin, repos 90 s entre circuits' },
+        { description: 'Renforcement global',       details: '3×15 squats, 3×12 fentes, 2×1 min gainage latéral, 3×10 Nordic curl, étirements 10 min' },
+      ]
+      const rv = renfoVariants[w % renfoVariants.length]
+      seances.push({
+        jour: jourRenfo,
+        type: 'Renforcement musculaire',
+        description: rv.description,
+        distance_km: 0,
+        allure_cible: null,
+        duree_minutes: 40,
+        intensite: 'modéré',
+        details: rv.details,
+      })
+    }
+
+    // ── Sortie vélo ──
+    const addVelo = isRecovery && (level === 'intermediaire' || level === 'avance')
+      && availableDays.length > (addRenfo ? 1 : 0)
+    if (addVelo) {
+      const jourVelo = availableDays[addRenfo ? 1 : 0]
+      seances.push({
+        jour: jourVelo,
+        type: 'Sortie vélo',
+        description: 'Sortie récupération sur vélo',
+        distance_km: 0,
+        allure_cible: null,
+        duree_minutes: 45,
+        intensite: 'facile',
+        details: 'Sortie facile à cadence légère, pas d\'effort, permet de récupérer tout en restant actif',
+      })
+    }
+
+    // ── Jour de repos ──
+    if (availableDays.length > 0) {
+      const jourRepos = availableDays[availableDays.length - 1]
+      seances.push({
+        jour: jourRepos,
+        type: 'Jour de repos',
+        description: 'Récupération complète',
+        distance_km: 0,
+        allure_cible: null,
+        duree_minutes: 0,
+        intensite: 'récupération',
+        details: 'Journée sans entraînement. Privilégiez le sommeil, une alimentation récupératrice et des étirements légers si besoin.',
+      })
+    }
+
+    // ── Tri des séances par ordre du jour (Lundi → Dimanche) ──
+    const DAY_ORDER = { 'Lundi': 0, 'Mardi': 1, 'Mercredi': 2, 'Jeudi': 3, 'Vendredi': 4, 'Samedi': 5, 'Dimanche': 6 }
+    seances.sort((a, b) => (DAY_ORDER[a.jour] ?? 7) - (DAY_ORDER[b.jour] ?? 7))
 
     const theme = isTaperW
       ? (w === taperStart ? 'Affûtage final' : 'Récupération pré-course')

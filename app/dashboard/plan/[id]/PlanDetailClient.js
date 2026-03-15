@@ -11,12 +11,15 @@ const INTENSITE_COLORS = {
 }
 
 const SESSION_SHAPE_COLORS = {
-  'Footing léger':       '#02A257',
-  'Footing progressif':  '#059669',
-  'Sortie longue':       '#2563eb',
-  'Fractionné':          '#dc2626',
-  'Allure spécifique':   '#d97706',
-  'Récupération active': '#7c3aed',
+  'Footing léger':           '#02A257',
+  'Footing progressif':      '#059669',
+  'Sortie longue':           '#2563eb',
+  'Fractionné':              '#dc2626',
+  'Allure spécifique':       '#d97706',
+  'Récupération active':     '#7c3aed',
+  'Renforcement musculaire': '#0891b2',
+  'Sortie vélo':             '#0284c7',
+  'Jour de repos':           '#9ca3af',
 }
 
 const FATIGUE_LEVELS = [
@@ -205,6 +208,72 @@ function buildNutritionAdvice(seance) {
         apres: 'Magnésium, protéines et bons lipides : c\'est le trio de la récupération. Saumon, sardines ou maquereau + légumes verts + quelques noix — un repas de récupération idéal.',
       },
     ],
+    'Renforcement musculaire': [
+      {
+        avant: 'Repas normal 1h30-2h avant. Privilégiez les protéines et les glucides complexes. Le renforcement sollicite les fibres musculaires — elles ont besoin de carburant pour travailler efficacement.',
+        pendant: 'Eau uniquement. Le renforcement ne justifie pas de ravitaillement glucidique. Restez bien hydraté entre les séries.',
+        apres: 'C\'est le moment le plus important pour la nutrition : les protéines dans les 30 min suivant la séance accélèrent la reconstruction musculaire. Yaourt grec, œufs, fromage blanc ou shake protéiné — visez 20-30g de protéines.',
+      },
+      {
+        avant: 'Un repas léger protéiné 2h avant : poulet, œufs ou légumineuses + glucides modérés. Évitez les aliments lourds qui alourdiront la séance.',
+        pendant: 'Eau fraîche entre les séries. Pour les séances longues ou intenses, une boisson électrolytique légère peut aider.',
+        apres: 'Fenêtre anabolique dans les 30 min : protéines de qualité + glucides rapides (ratio 1:2). Votre corps reconstruit maintenant — ne manquez pas cette fenêtre.',
+      },
+      {
+        avant: 'Le renforcement ne nécessite pas de protocole nutritionnel élaboré. Mangez normalement 1h30-2h avant, en incluant des protéines pour préparer les muscles au travail.',
+        pendant: 'Hydratation régulière. Le renforcement fait transpirer — compensez avec de l\'eau.',
+        apres: 'Protéines prioritaires dans l\'heure suivant la séance. Associez à des glucides pour optimiser la récupération musculaire et recharger les réserves énergétiques.',
+      },
+      {
+        avant: 'Petit-déjeuner ou repas complet 2h avant, incluant protéines et glucides. Un estomac trop plein nuira à la qualité des mouvements — respectez le délai.',
+        pendant: 'Eau entre chaque série. Si la séance dépasse 1h, une boisson légèrement sucrée peut maintenir les performances.',
+        apres: 'La fenêtre de récupération post-renforcement est critique. 20-40g de protéines dans les 30 min : œufs, poulet, poisson ou protéines végétales. Accompagnez de fruits ou de féculents.',
+      },
+    ],
+    'Sortie vélo': [
+      {
+        avant: 'La sortie vélo de récupération n\'exige pas de préparation nutritionnelle particulière. Restez bien hydraté et mangez normalement.',
+        pendant: 'Eau régulière selon la durée et la chaleur. Pour une sortie récupération courte, rien d\'autre n\'est nécessaire.',
+        apres: 'Réhydratation et repas équilibré. Le vélo de récupération ne sollicite pas suffisamment les réserves pour nécessiter une stratégie nutritionnelle spécifique.',
+      },
+      {
+        avant: 'Sortie légère = besoins nutritionnels réduits. Mangez normalement et buvez bien avant de partir.',
+        pendant: 'Une gourde d\'eau suffit pour une sortie récupération. Buvez régulièrement même sans soif.',
+        apres: 'Repas normal post-séance. Profitez de cette sortie pour soigner votre alimentation de récupération : légumes, protéines, bons gras.',
+      },
+      {
+        avant: 'Pas de contrainte spécifique. Si la sortie dépasse 1h30, un petit snack glucidique 45 min avant peut être utile.',
+        pendant: 'Eau ou boisson légèrement isotonique si la durée dépasse 1h. Pédalage récupération = faibles besoins caloriques.',
+        apres: 'Réhydratation et alimentation équilibrée. Profitez du contexte récupérateur pour manger léger et nutritif.',
+      },
+      {
+        avant: 'Mangez normalement. Le vélo de récupération ne demande pas de charge glucidique.',
+        pendant: 'Hydratation selon soif et chaleur. Pour une sortie récupération, pas besoin de ravitaillement.',
+        apres: 'Un repas riche en légumes, protéines et bons lipides. Vous êtes en phase de récupération — nourrissez-la.',
+      },
+    ],
+    'Jour de repos': [
+      {
+        avant: 'Pas de séance, pas de contrainte nutritionnelle particulière. Mangez équilibré, en écoutant votre faim.',
+        pendant: 'Restez bien hydraté tout au long de la journée — 1,5 à 2L d\'eau minimum, plus si il fait chaud.',
+        apres: 'Journée idéale pour soigner votre alimentation de fond : légumes, protéines maigres, bons lipides (avocat, noix, huile d\'olive). Évitez l\'alcool qui perturbe la récupération.',
+      },
+      {
+        avant: 'Profitez de cette journée pour recharger intelligemment : glucides complexes (riz, pâtes, quinoa) si vous avez une séance intense le lendemain.',
+        pendant: 'Hydratation régulière. Jour de repos = soins nutritionnels prioritaires.',
+        apres: 'Un repas anti-inflammatoire : saumon, légumes colorés, curcuma, fruits rouges. Votre corps répare, aidez-le.',
+      },
+      {
+        avant: 'Mangez à votre faim, sans excès. Jour de repos ne veut pas dire "tout manger" — restez dans vos habitudes saines.',
+        pendant: 'Eau et tisanes. Évitez les boissons sucrées ou alcoolisées qui nuisent à la récupération.',
+        apres: 'Concentrez-vous sur les micronutriments aujourd\'hui : fruits, légumes, noix. Ce sont eux qui soutiennent la récupération au niveau cellulaire.',
+      },
+      {
+        avant: 'Jour de repos = opportunité nutritionnelle. Préparez bien votre prochain effort en mangeant des glucides de qualité si nécessaire.',
+        pendant: 'Hydratation correcte tout au long de la journée. Le repos n\'enlève pas le besoin d\'eau.',
+        apres: 'Dormez tôt, mangez léger le soir, optimisez votre récupération. La nuit qui suit un jour de repos est souvent la plus réparatrice.',
+      },
+    ],
   }
 
   return NUTRITION[type] || null
@@ -256,6 +325,24 @@ function buildCoachNarrative(seance) {
       `${det ? det + '. ' : ''}Après les efforts de cette semaine, votre corps a besoin de cette sortie légère${dist ? ` de ${dist}` : ''}. Courez sans montre si possible, à l'allure qui vous semble "ridiculement lente". Cette séance est aussi importante dans votre plan que les séances intenses — ne la négligez pas ou ne la sautez pas.`,
       `${det ? det + '. ' : ''}Récupération active${dist ? ` sur ${dist}` : ''}${duree ? ` (${duree})` : ''}. Gardez une foulée légère et décontractée${pace ? `, allure cible ${pace}` : ''}. Si vous avez couru fort ces derniers jours, vous sentirez peut-être une légèreté qui revient au fil des kilomètres — c'est le signe que la séance fait son travail.`,
       `${det ? det + '. ' : ''}Sortie douce de régénération${dist ? ` : ${dist}` : ''}. L'erreur classique est de courir trop vite "parce que ça va bien" — résistez à cette envie. La valeur est dans l'intensité basse. Profitez de cette sortie pour vous reconnecter à la course de façon légère, sans pression de performance.`,
+    ],
+    'Renforcement musculaire': [
+      `${det ? det + '. ' : ''}Le renforcement musculaire est le complément indispensable de votre entraînement course${duree ? ` (${duree})` : ''}. Des muscles forts protègent vos articulations, améliorent votre foulée et retardent la fatigue. Concentrez-vous sur la qualité d'exécution — la course sollicite tout le bas du corps, renforcez-le avec soin.`,
+      `${det ? det + '. ' : ''}Séance de renforcement${duree ? ` de ${duree}` : ''} : c'est ici que vous construisez la fondation musculaire qui vous permettra de courir plus vite sans blessure. Respectez les temps de repos entre les séries, et ne négligez pas le gainage — votre tronc est votre moteur.`,
+      `${det ? det + '. ' : ''}Le renforcement musculaire${duree ? ` (${duree})` : ''} est souvent la séance que les coureurs sautent en premier — c'est une erreur. Quadriceps, ischio-jambiers, mollets et fessiers renforcés = blessures évitées et secondes gagnées. Faites-en une priorité.`,
+      `${det ? det + '. ' : ''}Entraînement croisé${duree ? ` de ${duree}` : ''} : travaillez les groupes musculaires que la course seule ne sollicite pas suffisamment. Fentes, squats et gainage pour une foulée plus stable et économique.`,
+    ],
+    'Sortie vélo': [
+      `${det ? det + '. ' : ''}Sortie de récupération active sur vélo${duree ? ` (${duree})` : ''}. Le vélo est l'allié du coureur : il maintient le niveau cardiovasculaire sans l'impact du sol. Pédalez à cadence légère, en zone confortable — votre corps récupère pendant que vos jambes restent actives.`,
+      `${det ? det + '. ' : ''}Cross-training vélo${duree ? ` (${duree})` : ''} : une cadence élevée (90 tr/min) et une intensité basse drainent les acides lactiques sans créer de nouvelles contraintes. Idéal après une semaine chargée.`,
+      `${det ? det + '. ' : ''}Sortie vélo légère${duree ? ` de ${duree}` : ''}. L'entraînement croisé réduit le risque de blessure de surcharge lié à la course. Pas d'objectif de vitesse — juste un pédalage fluide et récupérateur.`,
+      `${det ? det + '. ' : ''}Vélo de récupération${duree ? ` (${duree})` : ''} : la séance parfaite pour les jours où vos jambes ont besoin de souffler. Restez en zone 1-2, savourez le mouvement sans contrainte.`,
+    ],
+    'Jour de repos': [
+      `Journée de récupération complète. Le repos est aussi un entraînement — c'est pendant la récupération que votre corps s'adapte et progresse. Dormez suffisamment, mangez bien, préparez mentalement la suite.`,
+      `Repos actif : vous n'avez rien à faire aujourd'hui, et c'est voulu. Les fibres musculaires se reconstruisent, les réserves glycogènes se reconstituent. Ne cédez pas à la tentation de "rattraper" une séance — respectez votre corps.`,
+      `Jour sans entraînement. La progression vient du cycle effort-récupération, et le repos en est une composante essentielle. Une marche légère ou quelques étirements doux suffisent si vous ressentez le besoin de bouger.`,
+      `Récupération totale. Ces jours de repos font partie de votre entraînement au même titre que vos sorties. Soignez votre alimentation, votre hydratation et votre sommeil — les vrais piliers de la performance.`,
     ],
   }
 
@@ -428,6 +515,29 @@ function SessionShape({ type, size = 28 }) {
   if (type === 'Récupération active') {
     return <svg width={s} height={s} viewBox="0 0 28 28" fill="none"><path d="M14 5 A9 9 0 1 1 5 14" stroke={color} strokeWidth={sw} strokeLinecap="round" /><polyline points="5,10 5,14 9,14" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" /></svg>
   }
+  if (type === 'Renforcement musculaire') {
+    return <svg width={s} height={s} viewBox="0 0 28 28" fill="none">
+      <rect x="2" y="11" width="5" height="6" rx="2" stroke={color} strokeWidth={sw}/>
+      <rect x="21" y="11" width="5" height="6" rx="2" stroke={color} strokeWidth={sw}/>
+      <rect x="5" y="8" width="4" height="12" rx="1.5" stroke={color} strokeWidth={sw}/>
+      <rect x="19" y="8" width="4" height="12" rx="1.5" stroke={color} strokeWidth={sw}/>
+      <line x1="9" y1="14" x2="19" y2="14" stroke={color} strokeWidth={sw} strokeLinecap="round"/>
+    </svg>
+  }
+  if (type === 'Sortie vélo') {
+    return <svg width={s} height={s} viewBox="0 0 28 28" fill="none">
+      <circle cx="8" cy="18" r="6" stroke={color} strokeWidth={sw}/>
+      <circle cx="20" cy="18" r="6" stroke={color} strokeWidth={sw}/>
+      <polyline points="8,18 13,8 16,8 20,18" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round"/>
+      <circle cx="13" cy="8" r="1.5" fill={color}/>
+    </svg>
+  }
+  if (type === 'Jour de repos') {
+    return <svg width={s} height={s} viewBox="0 0 28 28" fill="none">
+      <path d="M10 8 C10 14 18 14 18 20" stroke={color} strokeWidth={sw} strokeLinecap="round"/>
+      <circle cx="14" cy="14" r="9" stroke={color} strokeWidth={sw} strokeDasharray="3 2"/>
+    </svg>
+  }
   return <svg width={s} height={s} viewBox="0 0 28 28" fill="none"><rect x="4" y="4" width="20" height="20" rx="5" stroke={color} strokeWidth={sw} /></svg>
 }
 
@@ -490,7 +600,13 @@ function formatTargetTime(str) {
 }
 
 export default function PlanDetailClient({ plan }) {
-  const [localSemaines, setLocalSemaines] = useState(plan.semaines || [])
+  const DAY_ORDER_SORT = { 'Lundi': 0, 'Mardi': 1, 'Mercredi': 2, 'Jeudi': 3, 'Vendredi': 4, 'Samedi': 5, 'Dimanche': 6 }
+  const [localSemaines, setLocalSemaines] = useState(
+    (plan.semaines || []).map(sem => ({
+      ...sem,
+      seances: [...(sem.seances || [])].sort((a, b) => (DAY_ORDER_SORT[a.jour] ?? 7) - (DAY_ORDER_SORT[b.jour] ?? 7)),
+    }))
+  )
   const [selectedSession, setSelectedSession] = useState(null)
   const [addOpen, setAddOpen] = useState(false)
   const [addForm, setAddForm] = useState({ date: new Date().toISOString().split('T')[0], type_activite: 'Run', distance_km: '', duree_minutes: '', allure_moyenne: '', frequence_cardiaque_moy: '', denivele_positif: '', calories: '', note: '' })
@@ -752,21 +868,30 @@ export default function PlanDetailClient({ plan }) {
                   </div>
                 </div>
                 <div style={{ padding: '1.25rem 1.5rem' }}>
-                  <div style={{ fontSize: '0.6rem', fontWeight: '700', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Séance {sessionIndex + 1}</div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '700', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>
+                    {s.type === 'Jour de repos' ? 'Repos' : `Séance ${sessionIndex + 1}`}
+                  </div>
                   {s.description && <p style={{ fontSize: '0.9rem', color: '#464754', lineHeight: 1.55, marginBottom: '1rem' }}>{s.description}</p>}
-                  {/* Stats prévues */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
-                    {[
-                      { label: 'Distance', value: `${s.distance_km} km` },
-                      { label: 'Durée', value: `${s.duree_minutes} min` },
-                      { label: 'Allure cible', value: s.allure_cible || '—' },
-                    ].map(({ label, value }) => (
+                  {/* Stats prévues — masquées pour repos et renforcement sans distance */}
+                  {s.type !== 'Jour de repos' && (s.distance_km > 0 || s.type === 'Renforcement musculaire') && (
+                  <div style={{ display: 'grid', gridTemplateColumns: s.type === 'Renforcement musculaire' ? '1fr' : 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+                    {(s.type === 'Renforcement musculaire'
+                      ? [{ label: 'Durée', value: `${s.duree_minutes} min` }]
+                      : s.type === 'Sortie vélo'
+                      ? [{ label: 'Durée', value: `${s.duree_minutes} min` }]
+                      : [
+                          { label: 'Distance', value: `${s.distance_km} km` },
+                          { label: 'Durée', value: `${s.duree_minutes} min` },
+                          { label: 'Allure cible', value: s.allure_cible || '—' },
+                        ]
+                    ).map(({ label, value }) => (
                       <div key={label} style={{ background: '#f8f9fa', borderRadius: '10px', padding: '0.6rem 0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.3rem' }}>{label}</div>
                         <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#282830' }}>{value}</div>
                       </div>
                     ))}
                   </div>
+                  )}
                   {(() => {
                     const coachText = buildCoachNarrative(s)
                     if (s.type === 'Fractionné') {
@@ -806,9 +931,9 @@ export default function PlanDetailClient({ plan }) {
 
                   })()}
                   {/* Nutrition */}
-                  <NutritionSection seance={s} hash={hashSession(s)} />
+                  {s.type !== 'Jour de repos' && <NutritionSection seance={s} hash={hashSession(s)} />}
                   {/* Notes */}
-                  <NoteField
+                  {s.type !== 'Jour de repos' && <NoteField
                     note={typeof s.note === 'string' && s.note !== '[object Object]' ? s.note : ''}
                     fatigue={s.fatigue || null}
                     onSave={async ({ note, fatigue }) => {
@@ -822,9 +947,9 @@ export default function PlanDetailClient({ plan }) {
                         body: JSON.stringify({ plan_id: plan.id, week_index: weekIndex, session_index: sessionIndex, note, fatigue }),
                       })
                     }}
-                  />
+                  />}
                   {/* Mark as done */}
-                  {!strava ? (
+                  {s.type !== 'Jour de repos' && !strava ? (
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                       <button
                         onClick={() => toggleCompleted(weekIndex, sessionIndex)}
