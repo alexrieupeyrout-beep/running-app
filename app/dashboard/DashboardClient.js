@@ -203,7 +203,7 @@ function PlanSection({ plan, onAbandon }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Plan recap card */}
-      <div style={{ ...T.card }}>
+      <div onClick={() => router.push(`/dashboard/plan/${plan.id}`)} style={{ ...T.card, cursor: 'pointer' }}>
 
         <div style={{ padding: '1.4rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
 
@@ -221,7 +221,7 @@ function PlanSection({ plan, onAbandon }) {
               </div>
             </div>
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', width: '28px', height: '28px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+              <button onClick={e => { e.stopPropagation(); setMenuOpen(o => !o) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', width: '28px', height: '28px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
                 {[0,1,2].map(i => <span key={i} style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#c0c2cc', display: 'inline-block' }} />)}
               </button>
               {menuOpen && (
@@ -265,7 +265,7 @@ function PlanSection({ plan, onAbandon }) {
                   <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#282830', marginTop: '0.1rem' }}>{s.value}</div>
                 </div>
               ))}
-              <button onClick={() => setConfOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
+              <button onClick={e => { e.stopPropagation(); setConfOpen(true) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
                 <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Confiance</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.1rem' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: confStyle.bar, display: 'inline-block', flexShrink: 0 }} />
