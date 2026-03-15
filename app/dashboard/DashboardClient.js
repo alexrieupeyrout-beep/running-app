@@ -1572,6 +1572,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
             body: JSON.stringify({ rpe: activityRPE, note: activityNote }),
           })
           setActivityNoteSaved(true)
+          router.refresh()
         }
 
         return (
@@ -1599,6 +1600,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ is_favorite: newVal }),
                       })
+                      router.refresh()
                     }}
                     title={activityFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                     style={{ border: 'none', background: activityFavorite ? '#fff8e6' : '#f5f5f5', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
