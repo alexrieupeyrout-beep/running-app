@@ -49,7 +49,7 @@ export default function Signup() {
     })
     setLoading(false)
     if (error) {
-      setError('Une erreur est survenue. Vérifie ton adresse email.')
+      setError(error.message)
     } else {
       setSent(true)
     }
