@@ -1028,6 +1028,9 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
         {activeTab === 'plan' && (
           plans.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {plans.length > 1 ? 'Vos plans actifs' : 'Votre plan'}
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {plans.length > 1 && plans.map((p, i) => (
                   <button
@@ -1046,9 +1049,6 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                 <Link href="/onboarding" style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', textDecoration: 'none' }}>
                   + Nouveau plan
                 </Link>
-              </div>
-              <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                {plans.length > 1 ? 'Vos plans actifs' : 'Votre plan'}
               </div>
               <PlanSection plan={plans[selectedPlanIdx]} onAbandon={setConfirmAbandon} />
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
