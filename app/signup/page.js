@@ -22,9 +22,6 @@ export default function Signup() {
           <Link href="/" style={{ textDecoration: 'none' }}>
             <span className="text-[#02A257] font-black text-2xl tracking-tight">VITE</span>
           </Link>
-          <Link href="/features" style={{ fontSize: '0.82rem', fontWeight: '600', color: '#02A257', textDecoration: 'none' }}>
-            Ce que VITE sait faire →
-          </Link>
         </div>
       </nav>
 
