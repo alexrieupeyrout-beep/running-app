@@ -14,13 +14,24 @@ export async function DELETE(request, { params }) {
 export async function PATCH(request, { params }) {
   const { id } = await params
   const body = await request.json()
-  console.log('[PATCH courses] id:', id, 'body:', body)
+
+  // is_favorite via RPC pour contourner le cache schema PostgREST
+  if (body.is_favorite !== undefined) {
+    const { error } = await supabase.rpc('update_course_favorite', {
+      course_id: id,
+      fav: body.is_favorite,
+    })
+    if (error) return Response.json({ success: false, error: error.message }, { status: 500 })
+  }
+
+  // rpe + note via update classique
   const update = {}
   if (body.rpe !== undefined) update.rpe = body.rpe
   if (body.note !== undefined) update.note = body.note
-  if (body.is_favorite !== undefined) update.is_favorite = body.is_favorite
-  const { data, error } = await supabase.from('courses').update(update).eq('id', id).select()
-  console.log('[PATCH courses] result:', data, 'error:', error)
-  if (error) return Response.json({ success: false, error: error.message }, { status: 500 })
-  return Response.json({ success: true, updated: data })
+  if (Object.keys(update).length > 0) {
+    const { error } = await supabase.from('courses').update(update).eq('id', id)
+    if (error) return Response.json({ success: false, error: error.message }, { status: 500 })
+  }
+
+  return Response.json({ success: true })
 }

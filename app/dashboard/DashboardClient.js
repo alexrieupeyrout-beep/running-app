@@ -1595,14 +1595,11 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                     onClick={async () => {
                       const newVal = !activityFavorite
                       setActivityFavorite(newVal)
-                      console.log('[favorite] c.id:', c.id, 'newVal:', newVal)
-                      const res = await fetch(`/api/courses/${c.id}`, {
+                      await fetch(`/api/courses/${c.id}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ is_favorite: newVal }),
                       })
-                      const json = await res.json()
-                      console.log('[favorite] response:', json)
                       router.refresh()
                     }}
                     title={activityFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
