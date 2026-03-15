@@ -593,6 +593,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [confirmAbandon, setConfirmAbandon] = useState(null)
   const [activitiesExpanded, setActivitiesExpanded] = useState(false)
   const [activitiesType, setActivitiesType] = useState('all')
+  const [activitiesFavOnly, setActivitiesFavOnly] = useState(false)
   const [activitiesPeriode, setActivitiesPeriode] = useState('tout')
   const [abandonLoading, setAbandonLoading] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState(null)
@@ -1234,6 +1235,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                   .filter(c => {
                     if (!c.date) return false
                     if (periodeStart && new Date(c.date) < periodeStart) return false
+                    if (activitiesFavOnly && !c.is_favorite) return false
                     if (activitiesType === 'run') return RUN_TYPES_ACT.includes(c.type_activite) || !c.type_activite
                     if (activitiesType === 'velo') return VELO_TYPES_ACT.includes(c.type_activite)
                     if (activitiesType === 'autre') return OTHER_TYPES_ACT.includes(c.type_activite)
@@ -1267,10 +1269,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
 
                 return (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Activités récentes</div>
-                      <span style={{ fontSize: '0.7rem', color: '#9ea0ae' }}>{allCourses.length} activité{allCourses.length !== 1 ? 's' : ''}</span>
-                    </div>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Activités récentes</div>
 
                     {/* Filtres */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -1302,6 +1301,18 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                           </button>
                         ))}
                       </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#9ea0ae' }}>{allCourses.length} activité{allCourses.length !== 1 ? 's' : ''}</span>
+                      <button
+                        onClick={() => { setActivitiesFavOnly(f => !f); setActivitiesExpanded(false) }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.25rem 0.65rem', borderRadius: '99px', border: `1.5px solid ${activitiesFavOnly ? '#f59e0b' : '#e8e8e8'}`, background: activitiesFavOnly ? '#fff8e6' : 'white', cursor: 'pointer', transition: 'all 0.15s' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill={activitiesFavOnly ? '#f59e0b' : 'none'} stroke={activitiesFavOnly ? '#f59e0b' : '#c0c2cc'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span style={{ fontSize: '0.7rem', fontWeight: '600', color: activitiesFavOnly ? '#f59e0b' : '#9ea0ae' }}>Favoris</span>
+                      </button>
                     </div>
 
                     {recentCourses.length === 0 ? (
@@ -1341,15 +1352,17 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                                   <span style={{ fontWeight: '600', fontSize: '0.85rem', color: '#282830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {c.nom || typeLabel}
                                   </span>
-                                  {c.is_favorite && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                                    </svg>
-                                  )}
                                 </div>
                                 <div style={{ fontSize: '0.7rem', color: '#9ea0ae', marginTop: '0.1rem' }}>{dateStr}</div>
                               </div>
-                              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexShrink: 0 }}>
+                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
+                              {c.is_favorite && (
+                                <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#fff8e6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                  </svg>
+                                </div>
+                              )}
                                 {c.distance_km > 0 && (() => {
                                   const isVelo = ['Ride', 'VirtualRide', 'EBikeRide'].includes(c.type_activite)
                                   const speedKmh = isVelo && c.duree_minutes > 0
