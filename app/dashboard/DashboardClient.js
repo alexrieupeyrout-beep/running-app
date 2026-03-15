@@ -252,13 +252,13 @@ function PlanSection({ plan, onAbandon }) {
                 <>
                   <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
                   <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 20, background: 'white', border: '1px solid #c5e6d5', borderRadius: '12px', boxShadow: '0 6px 20px rgba(40,40,48,0.1)', minWidth: '190px', overflow: 'hidden' }}>
-                    <Link href="/onboarding" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
+                    <Link href="/onboarding" onClick={e => { e.stopPropagation(); setMenuOpen(false) }} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '500', color: '#282830', borderBottom: '1px solid #f0f0f0' }}>
                       <Settings size={14} color="#9ea0ae" /> Modifier le plan
                     </Link>
-                    <button onClick={() => { setMenuOpen(false); handlePause() }} disabled={pauseLoading} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#282830', textAlign: 'left', borderBottom: '1px solid #f0f0f0' }}>
+                    <button onClick={e => { e.stopPropagation(); setMenuOpen(false); handlePause() }} disabled={pauseLoading} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#282830', textAlign: 'left', borderBottom: '1px solid #f0f0f0' }}>
                       <PauseCircle size={14} color="#9ea0ae" /> {isPaused ? 'Reprendre le plan' : 'Mettre en pause'}
                     </button>
-                    <button onClick={() => { setMenuOpen(false); onAbandon(plan.id) }} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#dc2626', textAlign: 'left' }}>
+                    <button onClick={e => { e.stopPropagation(); setMenuOpen(false); onAbandon(plan.id) }} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '500', color: '#dc2626', textAlign: 'left' }}>
                       <XCircle size={14} color="#dc2626" /> Abandonner le plan
                     </button>
                   </div>
