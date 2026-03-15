@@ -1614,6 +1614,59 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                   </div>
                 )}
 
+                {/* Splits */}
+                {Array.isArray(c.splits) && c.splits.length > 0 && (() => {
+                  const allPaces = c.splits.map(s => s.average_speed > 0 ? 1000 / (s.average_speed * 60) : null).filter(Boolean)
+                  const minPace = Math.min(...allPaces)
+                  const maxPace = Math.max(...allPaces)
+                  const paceRange = maxPace - minPace || 1
+                  const fmtSec = (sec) => { const m = Math.floor(sec / 60); const s = sec % 60; return `${m}:${String(s).padStart(2,'0')}` }
+                  const fmtPaceSplit = (speed) => { if (!speed) return '—'; const p = 1000 / (speed * 60); const m = Math.floor(p); const s = Math.round((p - m) * 60); return `${m}:${String(s).padStart(2,'0')}` }
+                  return (
+                    <div>
+                      <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Splits</div>
+                      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
+                        {/* Header */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '2rem 1fr 1fr 1fr auto', gap: '0.5rem', padding: '0.45rem 0.85rem', background: '#f7f8fa', borderBottom: '1px solid #f0f0f0' }}>
+                          {['KM', 'Allure', 'Durée', 'FC', 'D+'].map(h => (
+                            <div key={h} style={{ fontSize: '0.58rem', fontWeight: '700', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{h}</div>
+                          ))}
+                        </div>
+                        {c.splits.map((s, i) => {
+                          const pace = s.average_speed > 0 ? 1000 / (s.average_speed * 60) : null
+                          const paceRatio = pace ? (pace - minPace) / paceRange : 0.5
+                          // vert (rapide) → rouge (lent)
+                          const r = Math.round(paceRatio * 220)
+                          const g = Math.round((1 - paceRatio) * 162 + 60)
+                          const barColor = `rgb(${r},${g},60)`
+                          const hasDplus = s.elevation_difference > 0
+                          return (
+                            <div key={i} style={{ display: 'grid', gridTemplateColumns: '2rem 1fr 1fr 1fr auto', gap: '0.5rem', padding: '0.55rem 0.85rem', background: i % 2 === 0 ? 'white' : '#fafafa', borderBottom: i < c.splits.length - 1 ? '1px solid #f5f5f5' : 'none', alignItems: 'center' }}>
+                              {/* KM */}
+                              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#282830' }}>{s.split}</div>
+                              {/* Allure + barre */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <div style={{ width: '3px', height: '16px', borderRadius: '99px', background: barColor, flexShrink: 0 }} />
+                                <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#282830', fontVariantNumeric: 'tabular-nums' }}>{fmtPaceSplit(s.average_speed)}</span>
+                              </div>
+                              {/* Durée */}
+                              <div style={{ fontSize: '0.78rem', color: '#656779', fontVariantNumeric: 'tabular-nums' }}>{fmtSec(s.moving_time)}</div>
+                              {/* FC */}
+                              <div style={{ fontSize: '0.78rem', color: '#656779' }}>
+                                {s.average_heartrate ? `${Math.round(s.average_heartrate)} bpm` : '—'}
+                              </div>
+                              {/* D+ */}
+                              <div style={{ fontSize: '0.75rem', color: hasDplus ? '#02A257' : '#c0c2cc', fontWeight: hasDplus ? '600' : '400', textAlign: 'right', minWidth: '2.5rem' }}>
+                                {hasDplus ? `+${Math.round(s.elevation_difference)}m` : '—'}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()}
+
                 {/* Lien Strava */}
                 {c.strava_id && (
                   <a href={`https://www.strava.com/activities/${c.strava_id}`} target="_blank" rel="noopener noreferrer"
