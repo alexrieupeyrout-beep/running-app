@@ -1344,8 +1344,17 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                                   .finally(() => setActivityPolylineLoading(false))
                               }
                             }} style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.85rem 1.1rem', borderBottom: '1px solid #f5f5f7', cursor: 'pointer', transition: 'background 0.1s' }} onMouseEnter={e => e.currentTarget.style.background='#fafffe'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0faf5', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <ActivityIcon type={c.type_activite} size={20} />
+                              <div style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0 }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0faf5', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <ActivityIcon type={c.type_activite} size={20} />
+                                </div>
+                                {c.strava_id && (
+                                  <div style={{ position: 'absolute', bottom: '-3px', right: '-3px', width: '14px', height: '14px', borderRadius: '4px', background: '#FC4C02', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid white' }}>
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="white">
+                                      <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+                                    </svg>
+                                  </div>
+                                )}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
