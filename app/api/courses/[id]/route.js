@@ -10,3 +10,13 @@ export async function DELETE(request, { params }) {
   await supabase.from('courses').delete().eq('id', id)
   return Response.json({ success: true })
 }
+
+export async function PATCH(request, { params }) {
+  const { id } = await params
+  const body = await request.json()
+  const update = {}
+  if (body.rpe !== undefined) update.rpe = body.rpe
+  if (body.note !== undefined) update.note = body.note
+  await supabase.from('courses').update(update).eq('id', id)
+  return Response.json({ success: true })
+}

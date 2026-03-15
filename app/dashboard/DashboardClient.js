@@ -88,6 +88,49 @@ function ActivityIcon({ type, size = 18 }) {
   return <Activity {...props} />
 }
 
+function decodePolyline(encoded) {
+  const points = []
+  let index = 0, lat = 0, lng = 0
+  while (index < encoded.length) {
+    let b, shift = 0, result = 0
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5 } while (b >= 0x20)
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1)
+    shift = 0; result = 0
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5 } while (b >= 0x20)
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1)
+    points.push([lat / 1e5, lng / 1e5])
+  }
+  return points
+}
+
+function RouteMap({ polyline }) {
+  const points = decodePolyline(polyline)
+  if (points.length < 2) return null
+  const lats = points.map(p => p[0])
+  const lngs = points.map(p => p[1])
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats)
+  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs)
+  const W = 440, H = 180, PAD = 16
+  const scaleX = (W - PAD * 2) / (maxLng - minLng || 1)
+  const scaleY = (H - PAD * 2) / (maxLat - minLat || 1)
+  const scale = Math.min(scaleX, scaleY)
+  const offsetX = (W - (maxLng - minLng) * scale) / 2
+  const offsetY = (H - (maxLat - minLat) * scale) / 2
+  const toX = (lng) => offsetX + (lng - minLng) * scale
+  const toY = (lat) => H - offsetY - (lat - minLat) * scale
+  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(p[1]).toFixed(1)},${toY(p[0]).toFixed(1)}`).join(' ')
+  const startX = toX(points[0][1]), startY = toY(points[0][0])
+  const endX = toX(points[points.length - 1][1]), endY = toY(points[points.length - 1][0])
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ borderRadius: '12px', background: '#f0faf5', display: 'block' }}>
+      <path d={d} fill="none" stroke="#c5e6d5" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#02A257" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={startX} cy={startY} r="5" fill="white" stroke="#02A257" strokeWidth="2" />
+      <circle cx={endX} cy={endY} r="5" fill="#02A257" stroke="white" strokeWidth="2" />
+    </svg>
+  )
+}
+
 function StravaLogo({ size = 14 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="#FC4C02">
@@ -552,6 +595,12 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [activitiesType, setActivitiesType] = useState('all')
   const [activitiesPeriode, setActivitiesPeriode] = useState('tout')
   const [abandonLoading, setAbandonLoading] = useState(false)
+  const [selectedActivity, setSelectedActivity] = useState(null)
+  const [activityRPE, setActivityRPE] = useState(null)
+  const [activityNote, setActivityNote] = useState('')
+  const [activityNoteSaved, setActivityNoteSaved] = useState(false)
+  const [activityPolyline, setActivityPolyline] = useState(null)
+  const [activityPolylineLoading, setActivityPolylineLoading] = useState(false)
 
   const now = new Date()
   const filtered = courses.filter(c => {
@@ -1268,7 +1317,20 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                           const date = new Date(c.date)
                           const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
                           return (
-                            <div key={c.id || i} style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.85rem 1.1rem', borderBottom: '1px solid #f5f5f7' }}>
+                            <div key={c.id || i} onClick={() => {
+                              setSelectedActivity(c)
+                              setActivityRPE(c.rpe || null)
+                              setActivityNote(c.note || '')
+                              setActivityNoteSaved(false)
+                              setActivityPolyline(null)
+                              if (c.strava_id) {
+                                setActivityPolylineLoading(true)
+                                fetch(`/api/strava/activity/${c.strava_id}`)
+                                  .then(r => r.json())
+                                  .then(d => { setActivityPolyline(d.polyline || null) })
+                                  .finally(() => setActivityPolylineLoading(false))
+                              }
+                            }} style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.85rem 1.1rem', borderBottom: '1px solid #f5f5f7', cursor: 'pointer', transition: 'background 0.1s' }} onMouseEnter={e => e.currentTarget.style.background='#fafffe'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                               <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0faf5', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <ActivityIcon type={c.type_activite} size={20} />
                               </div>
@@ -1461,6 +1523,151 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
           )
         )}
       </div>
+
+      {/* ── Activity detail modal ── */}
+      {selectedActivity && (() => {
+        const c = selectedActivity
+        const isVelo = ['Ride', 'VirtualRide', 'EBikeRide'].includes(c.type_activite)
+        const speedKmh = isVelo && c.duree_minutes > 0 ? Math.round((c.distance_km / (c.duree_minutes / 60)) * 10) / 10 : null
+        const fmtAllureModal = (a) => { if (!a) return null; const m = Math.floor(a); const s = Math.round((a - m) * 60); return `${m}'${String(s).padStart(2,'0')}"` }
+        const fmtDureeModal = (min) => { if (!min) return null; const h = Math.floor(min / 60); const m = min % 60; return h > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${m}min` }
+        const date = new Date(c.date)
+        const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        const TYPE_LABEL = { 'Run': 'Course', 'Trail': 'Trail', 'VirtualRun': 'Course virtuelle', 'Ride': 'Vélo', 'VirtualRide': 'Vélo virtuel', 'EBikeRide': 'Vélo électrique', 'Walk': 'Marche', 'Hike': 'Randonnée', 'Swim': 'Natation', 'WeightTraining': 'Renforcement', 'Workout': 'Workout', 'Yoga': 'Yoga' }
+        const typeLabel = TYPE_LABEL[c.type_activite] || 'Activité'
+
+        const RPE_OPTIONS = [
+          { val: 1, emoji: '😴', label: 'Très facile' },
+          { val: 2, emoji: '🙂', label: 'Facile' },
+          { val: 3, emoji: '😤', label: 'Modéré' },
+          { val: 4, emoji: '😰', label: 'Difficile' },
+          { val: 5, emoji: '🥵', label: 'Maximum' },
+        ]
+
+        const stats = [
+          c.distance_km > 0 && { label: 'Distance', value: `${Math.round(c.distance_km * 10) / 10}`, unit: 'km' },
+          fmtDureeModal(c.duree_minutes) && { label: 'Durée', value: fmtDureeModal(c.duree_minutes), unit: '' },
+          isVelo
+            ? speedKmh && { label: 'Vitesse moy.', value: `${speedKmh}`, unit: 'km/h' }
+            : fmtAllureModal(c.allure_moyenne) && { label: 'Allure moy.', value: fmtAllureModal(c.allure_moyenne), unit: '/km' },
+          c.frequence_cardiaque_moy && { label: 'FC moyenne', value: `${Math.round(c.frequence_cardiaque_moy)}`, unit: 'bpm' },
+          c.frequence_cardiaque_max && { label: 'FC max', value: `${Math.round(c.frequence_cardiaque_max)}`, unit: 'bpm' },
+          c.denivele_positif > 0 && { label: 'Dénivelé +', value: `${Math.round(c.denivele_positif)}`, unit: 'm' },
+          c.calories > 0 && { label: 'Calories', value: `${Math.round(c.calories)}`, unit: 'kcal' },
+        ].filter(Boolean)
+
+        const saveNote = async () => {
+          await fetch(`/api/courses/${c.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rpe: activityRPE, note: activityNote }),
+          })
+          setActivityNoteSaved(true)
+        }
+
+        return (
+          <div onClick={() => setSelectedActivity(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,28,36,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(3px)', padding: '1.25rem' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(28,28,36,0.2)' }}>
+
+              {/* Header */}
+              <div style={{ padding: '1.25rem 1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#f0faf5', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ActivityIcon type={c.type_activite} size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#282830' }}>{c.nom || typeLabel}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#9ea0ae', marginTop: '0.1rem', textTransform: 'capitalize' }}>{dateStr}</div>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedActivity(null)} style={{ border: 'none', background: '#f5f5f5', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <XCircle size={16} color="#c0c2cc" />
+                </button>
+              </div>
+
+              <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+                {/* Tracé GPS */}
+                {c.strava_id && (
+                  <div style={{ borderRadius: '14px', overflow: 'hidden', background: '#f0faf5', minHeight: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {activityPolylineLoading ? (
+                      <div style={{ fontSize: '0.75rem', color: '#9ea0ae', padding: '1.5rem' }}>Chargement du tracé…</div>
+                    ) : activityPolyline ? (
+                      <RouteMap polyline={activityPolyline} />
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: '#b0b3c1', padding: '1.5rem' }}>Tracé non disponible</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Stats grid */}
+                {stats.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+                    {stats.map(({ label, value, unit }) => (
+                      <div key={label} style={{ background: '#f7f8fa', borderRadius: '12px', padding: '0.75rem 0.85rem' }}>
+                        <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.3rem' }}>{label}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830', lineHeight: 1 }}>
+                          {value}<span style={{ fontSize: '0.62rem', fontWeight: '500', color: '#9ea0ae', marginLeft: '2px' }}>{unit}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Lien Strava */}
+                {c.strava_id && (
+                  <a href={`https://www.strava.com/activities/${c.strava_id}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', borderRadius: '12px', background: '#fff5f0', border: '1px solid #ffd4c2', textDecoration: 'none' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#FC4C02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#FC4C02' }}>Voir sur Strava</span>
+                    <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#FC4C02' }}>→</span>
+                  </a>
+                )}
+
+                {/* RPE */}
+                <div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Ressenti</div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {RPE_OPTIONS.map(({ val, emoji, label }) => (
+                      <button key={val} onClick={() => setActivityRPE(activityRPE === val ? null : val)}
+                        title={label}
+                        style={{ flex: 1, padding: '0.5rem 0.25rem', borderRadius: '10px', border: `2px solid ${activityRPE === val ? '#02A257' : '#e8e8e8'}`, background: activityRPE === val ? '#f0faf5' : 'white', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', transition: 'all 0.12s' }}>
+                        <span style={{ fontSize: '1.3rem', lineHeight: 1 }}>{emoji}</span>
+                        <span style={{ fontSize: '0.55rem', fontWeight: '600', color: activityRPE === val ? '#02A257' : '#b0b3c1', textAlign: 'center', lineHeight: 1.2 }}>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Note */}
+                <div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Note</div>
+                  <textarea
+                    value={activityNote}
+                    onChange={e => { setActivityNote(e.target.value); setActivityNoteSaved(false) }}
+                    placeholder="Comment s'est passée cette séance ? Sensations, météo, remarques..."
+                    rows={3}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#282830', background: '#fafafa', resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.5 }}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: '0.6rem' }}>
+                  <button onClick={saveNote}
+                    style={{ flex: 1, padding: '0.7rem', borderRadius: '12px', border: 'none', background: activityNoteSaved ? '#f0faf5' : '#02A257', color: activityNoteSaved ? '#02A257' : 'white', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    {activityNoteSaved ? '✓ Sauvegardé' : 'Sauvegarder'}
+                  </button>
+                  <button onClick={() => { setSelectedActivity(null); setConfirmDelete(c.id) }}
+                    style={{ padding: '0.7rem 1rem', borderRadius: '12px', border: '1.5px solid #fecaca', background: 'white', color: '#dc2626', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}>
+                    Supprimer
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Delete confirm modal ── */}
       {confirmDelete && (
