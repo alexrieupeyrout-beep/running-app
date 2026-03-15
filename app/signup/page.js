@@ -18,9 +18,12 @@ export default function Signup() {
     <div className="min-h-screen bg-[#f0faf5] flex flex-col">
       {/* Nav */}
       <nav className="bg-white border-b border-[#c5e6d5]">
-        <div className="max-w-2xl mx-auto w-full px-4 sm:px-6" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
+        <div className="max-w-2xl mx-auto w-full px-4 sm:px-6" style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <span className="text-[#02A257] font-black text-2xl tracking-tight">VITE</span>
+          </Link>
+          <Link href="/features" style={{ fontSize: '0.82rem', fontWeight: '600', color: '#02A257', textDecoration: 'none' }}>
+            Ce que VITE sait faire →
           </Link>
         </div>
       </nav>

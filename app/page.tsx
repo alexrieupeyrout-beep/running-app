@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Crosshair, Activity, RefreshCw, ArrowRight, CheckCircle2, Circle } from "lucide-react";
+import { Crosshair, Activity, RefreshCw, ArrowRight, CheckCircle2, Circle, ChevronDown } from "lucide-react";
 
 const features = [
   {
@@ -118,14 +118,17 @@ export default function Home() {
       {/* Nav */}
       <nav className="bg-white border-b border-[#c5e6d5]">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[#02A257] font-black text-4xl tracking-tight">VITE</span>
+          <span className="text-[#02A257] font-black text-4xl tracking-tight">VITE</span>
+          <div className="flex-1 flex justify-center">
+            <Link href="/features" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-[#282830] hover:opacity-70 transition-opacity">
+              Ce que VITE sait faire <ChevronDown size={14} />
+            </Link>
           </div>
           <Link
             href="/dashboard?tab=plan"
             className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#02A257] hover:bg-[#019048] transition-colors px-4 py-2 rounded-xl"
           >
-            Dashboard <ArrowRight size={14} />
+            Dashboard
           </Link>
         </div>
       </nav>

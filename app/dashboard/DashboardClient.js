@@ -1073,14 +1073,68 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ ...T.card, padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
-                  <div style={{ fontSize: '0.85rem', ...T.muted }}>Crée ton plan d'entraînement personnalisé pour commencer.</div>
+              <div style={{ ...T.card, padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem', overflow: 'hidden' }}>
+                {/* Texte + CTA */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: '800', fontSize: '1rem', color: '#282830', marginBottom: '0.35rem' }}>Prêt à t'entraîner ?</div>
+                  <div style={{ fontSize: '0.8rem', color: '#9ea0ae', lineHeight: 1.55, marginBottom: '0.75rem' }}>Un plan sur-mesure, semaine par semaine, qui s'adapte à ton niveau, ta dispo et ta course cible. Progressif, intelligent, et fait pour tenir.</div>
+                  {/* Types de séances */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1rem' }}>
+                    {[
+                      { label: 'Footing léger',      dot: '#02A257' },
+                      { label: 'Sortie longue',       dot: '#16a34a' },
+                      { label: 'Fractionné',          dot: '#dc2626' },
+                      { label: 'Récupération',        dot: '#7c3aed' },
+                      { label: 'Renforcement',        dot: '#0891b2' },
+                      { label: 'Sortie vélo',         dot: '#0284c7' },
+                    ].map(({ label, dot }) => (
+                      <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', fontWeight: '500', color: '#656779', background: '#f5f5f7', borderRadius: '99px', padding: '0.2rem 0.55rem' }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0, display: 'inline-block' }} />
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  <Link href="/onboarding" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: '#02A257', color: 'white', padding: '0.6rem 1.1rem', borderRadius: '10px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700' }}>
+                    Créer mon plan →
+                  </Link>
                 </div>
-                <Link href="/onboarding" style={{ background: '#02A257', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
-                  Créer mon plan →
-                </Link>
+
+                {/* Mini mockups */}
+                <div style={{ position: 'relative', width: 110, height: 130, flexShrink: 0 }}>
+                  {/* Carte arrière */}
+                  <div style={{ position: 'absolute', top: 10, right: 0, width: 95, height: 115, background: '#f0fdf4', border: '1px solid #c5e6d5', borderRadius: '10px', transform: 'rotate(4deg)' }}>
+                    <div style={{ padding: '8px 8px 6px' }}>
+                      <div style={{ height: 6, width: '60%', background: '#c5e6d5', borderRadius: 99, marginBottom: 6 }} />
+                      <div style={{ height: 3, background: '#daf0e8', borderRadius: 99, marginBottom: 8, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: '45%', background: '#02A257', borderRadius: 99 }} />
+                      </div>
+                      {[['#86efac', '10K · Footing', '8km'], ['#fde68a', 'Fractionné', '6km'], ['#c5e6d5', 'Sortie longue', '14km']].map(([c, label, dist], i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: c, flexShrink: 0 }} />
+                          <div style={{ height: 4, flex: 1, background: '#e8f5ee', borderRadius: 99 }} />
+                          <div style={{ height: 4, width: 16, background: '#c5e6d5', borderRadius: 99 }} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Carte avant */}
+                  <div style={{ position: 'absolute', top: 0, left: 0, width: 95, height: 115, background: 'white', border: '1px solid #c5e6d5', borderRadius: '10px', boxShadow: '0 4px 12px rgba(2,162,87,0.12)', transform: 'rotate(-2deg)' }}>
+                    <div style={{ padding: '8px 8px 6px' }}>
+                      <div style={{ height: 6, width: '70%', background: '#282830', borderRadius: 99, marginBottom: 4, opacity: 0.15 }} />
+                      <div style={{ height: 3, background: '#f0f0f0', borderRadius: 99, marginBottom: 8, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: '30%', background: '#02A257', borderRadius: 99 }} />
+                      </div>
+                      {[['#02A257', 0.9], ['#fbbf24', 0.7], ['#86efac', 0.85], ['#02A257', 0.5]].map(([c, op], i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: c, flexShrink: 0 }} />
+                          <div style={{ height: 4, flex: 1, background: '#f5f5f5', borderRadius: 99 }} />
+                          <div style={{ height: 4, width: 14, background: '#e8f5ee', borderRadius: 99 }} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
               </div>
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '0.75rem' }}>
