@@ -81,7 +81,7 @@ export default function Signup() {
             </div>
             <h1 className="text-2xl font-bold text-[#282830] mb-2">Rejoins VITE</h1>
             <p className="text-[#9ea0ae] text-sm leading-relaxed">
-              Génère ton plan d'entraînement personnalisé.
+              Ton prochain objectif mérite un vrai plan.<br/>Analyse, progresse, performe.
             </p>
           </div>
 
@@ -89,25 +89,34 @@ export default function Signup() {
           {sent ? (
             <div style={{
               background: 'white', border: '1.5px solid #c5e6d5', borderRadius: '20px',
-              padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: '0.75rem', textAlign: 'center',
+              overflow: 'hidden', textAlign: 'center',
             }}>
-              <CheckCircle size={36} color="#02A257" strokeWidth={1.75} />
-              <div>
-                <p style={{ fontWeight: '700', fontSize: '0.95rem', color: '#282830', marginBottom: '0.35rem' }}>
-                  Vérifie ta boîte mail
-                </p>
-                <p style={{ fontSize: '0.82rem', color: '#9ea0ae', lineHeight: '1.5' }}>
-                  On a envoyé un lien de connexion à <strong style={{ color: '#282830' }}>{email}</strong>.<br />
-                  Clique dessus pour accéder à ton espace.
+              {/* Bandeau vert */}
+              <div style={{ background: 'linear-gradient(135deg, #02A257, #019048)', padding: '1.75rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
+                <CheckCircle size={40} color="white" strokeWidth={1.75} />
+                <p style={{ fontWeight: '800', fontSize: '1.05rem', color: 'white', margin: 0 }}>
+                  Lien envoyé ! 🏃
                 </p>
               </div>
-              <button
-                onClick={() => { setSent(false); setEmail('') }}
-                style={{ fontSize: '0.78rem', color: '#02A257', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.25rem' }}
-              >
-                Utiliser une autre adresse
-              </button>
+              {/* Corps */}
+              <div style={{ padding: '1.5rem' }}>
+                <p style={{ fontSize: '0.85rem', color: '#282830', fontWeight: '600', marginBottom: '0.4rem' }}>
+                  Vérifie ta boîte mail
+                </p>
+                <p style={{ fontSize: '0.8rem', color: '#9ea0ae', lineHeight: '1.6', marginBottom: '1rem' }}>
+                  On a envoyé un lien de connexion à<br/>
+                  <strong style={{ color: '#282830' }}>{email}</strong>
+                </p>
+                <div style={{ background: '#f0faf5', borderRadius: '12px', padding: '0.75rem', fontSize: '0.75rem', color: '#02A257', fontWeight: '500', marginBottom: '1.25rem' }}>
+                  ⚡ Valable 1 heure — ne traîne pas !
+                </div>
+                <button
+                  onClick={() => { setSent(false); setEmail('') }}
+                  style={{ fontSize: '0.78rem', color: '#9ea0ae', fontWeight: '500', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Utiliser une autre adresse
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleMagicLink} style={{
@@ -170,16 +179,17 @@ export default function Signup() {
           </button>
 
           {/* Accès rapide PIN — discret */}
-          <form onSubmit={handlePin} style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+          <form onSubmit={handlePin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', borderTop: '1px solid #f0f0f0', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+            <label style={{ fontSize: '0.65rem', color: '#d1d5db', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Accès admin</label>
             <input
               type="password"
-              placeholder="••••"
+              placeholder="Code"
               value={pin}
               onChange={e => setPin(e.target.value)}
               style={{
-                width: '80px', padding: '0.4rem 0.6rem', borderRadius: '8px', textAlign: 'center',
-                border: '1px solid #e8e8e8', fontSize: '0.8rem', color: '#9ea0ae',
-                background: 'transparent', outline: 'none', letterSpacing: '0.2em',
+                width: '90px', padding: '0.45rem 0.75rem', borderRadius: '8px', textAlign: 'center',
+                border: '1px solid #e8e8e8', fontSize: '0.85rem', color: '#9ea0ae',
+                background: '#fafafa', outline: 'none', letterSpacing: '0.15em',
               }}
             />
             {pinError && <span style={{ fontSize: '0.7rem', color: '#e53e3e' }}>{pinError}</span>}
