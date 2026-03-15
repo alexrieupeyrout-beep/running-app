@@ -695,26 +695,6 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
     <div style={{ minHeight: '100vh', background: '#f0faf5', fontFamily: 'system-ui, sans-serif' }}>
       <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
 
-      {/* ── Feedback card (fixed bas droite) ── */}
-      <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 50, background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.1rem 1.25rem', boxShadow: '0 4px 24px rgba(40,40,48,0.12)', maxWidth: '240px' }}>
-        {/* Coach photo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.65rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid #c5e6d5' }}>
-            <img src="/coach.png" alt="Coach" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
-          </div>
-          <div>
-            <div style={{ fontWeight: '700', color: '#282830', fontSize: '0.85rem', lineHeight: 1.2 }}>Discovery in progress</div>
-            <div style={{ fontSize: '0.65rem', color: '#02A257', fontWeight: '600', marginTop: '0.1rem' }}>Le coach est sur le coup</div>
-          </div>
-        </div>
-        <div style={{ fontSize: '0.74rem', color: '#9ea0ae', lineHeight: 1.55, marginBottom: '0.75rem' }}>Une idée, un bug, un manque ? On construit VITE avec toi.</div>
-        <button
-          onClick={() => window.Tally?.openPopup('5B2X2Z', { layout: 'modal', width: 600, autoClose: 3000 })}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%', padding: '0.5rem', borderRadius: '10px', background: '#02A257', color: 'white', fontSize: '0.76rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
-        >
-          Partager mon avis →
-        </button>
-      </div>
 
       {/* ── Sticky header ────────────────────────────── */}
       <div style={{ position: 'sticky', top: 0, background: 'white', borderBottom: '1px solid #c5e6d5', zIndex: 10 }}>
@@ -1474,6 +1454,26 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                   </>
                 )
               })()}
+
+            {/* ── Feedback card ── */}
+            <div style={{ background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.1rem 1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.65rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid #c5e6d5' }}>
+                  <img src="/coach.png" alt="Coach" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '700', color: '#282830', fontSize: '0.85rem', lineHeight: 1.2 }}>Discovery in progress</div>
+                  <div style={{ fontSize: '0.65rem', color: '#02A257', fontWeight: '600', marginTop: '0.1rem' }}>Le coach est sur le coup</div>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#9ea0ae', lineHeight: 1.55, marginBottom: '0.75rem' }}>Une idée, un bug, un manque ? On construit VITE avec toi.</div>
+              <button
+                onClick={() => window.Tally?.openPopup('5B2X2Z', { layout: 'modal', width: 600, autoClose: 3000 })}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%', padding: '0.5rem', borderRadius: '10px', background: '#02A257', color: 'white', fontSize: '0.76rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+              >
+                Partager mon avis →
+              </button>
+            </div>
 
             </div>
           )
