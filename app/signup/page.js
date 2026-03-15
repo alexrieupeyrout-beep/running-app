@@ -11,12 +11,30 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [pin, setPin] = useState('')
+  const [pinError, setPinError] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) router.replace('/dashboard')
     })
   }, [])
+
+  async function handlePin(e) {
+    e.preventDefault()
+    setPinError('')
+    const res = await fetch('/api/auth/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    })
+    if (res.ok) {
+      localStorage.setItem('pin_authed', '1')
+      router.replace('/dashboard')
+    } else {
+      setPinError('Code incorrect')
+    }
+  }
 
   async function handleMagicLink(e) {
     e.preventDefault()
@@ -164,6 +182,23 @@ export default function Signup() {
           )}
 
         </div>
+
+        {/* Accès rapide PIN — discret */}
+        <form onSubmit={handlePin} style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+          <input
+            type="password"
+            placeholder="••••"
+            value={pin}
+            onChange={e => setPin(e.target.value)}
+            style={{
+              width: '80px', padding: '0.4rem 0.6rem', borderRadius: '8px', textAlign: 'center',
+              border: '1px solid #e8e8e8', fontSize: '0.8rem', color: '#9ea0ae',
+              background: 'transparent', outline: 'none', letterSpacing: '0.2em',
+            }}
+          />
+          {pinError && <span style={{ fontSize: '0.7rem', color: '#e53e3e' }}>{pinError}</span>}
+        </form>
+
       </div>
     </div>
   )

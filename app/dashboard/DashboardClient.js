@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Settings, XCircle, PauseCircle, Bike, Dumbbell, Footprints, Waves, Zap, Mountain, Activity, Leaf } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 const INTENSITE_COLORS = {
   'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
@@ -556,6 +557,13 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [advancedProfile, setAdvancedProfile] = useState({})
   const [advancedEdit, setAdvancedEdit] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+
+  useEffect(() => {
+    if (localStorage.getItem('pin_authed') === '1') return
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.replace('/signup')
+    })
+  }, [])
 
   useEffect(() => {
     fetch('/api/profile/advanced')
