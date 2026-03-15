@@ -119,9 +119,12 @@ export default function Home() {
       <nav className="bg-white border-b border-[#c5e6d5]">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <span className="text-[#02A257] font-black text-4xl tracking-tight">VITE</span>
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center gap-8">
             <Link href="/features" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-[#282830] hover:opacity-70 transition-opacity">
               Ce que VITE sait faire <ChevronDown size={14} />
+            </Link>
+            <Link href="/help" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-[#282830] hover:opacity-70 transition-opacity">
+              Aide <ChevronDown size={14} />
             </Link>
           </div>
           <Link
