@@ -124,6 +124,41 @@ function getActivity(seance, mockOverride = null) {
 }
 
 // ── Shared style tokens ──────────────────────────────────────
+const DISTANCE_ICONS = {
+  '5K': (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="10" stroke="#02A257" strokeWidth="2.5"/>
+      <circle cx="16" cy="16" r="4" fill="#02A257"/>
+    </svg>
+  ),
+  '10K': (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="11" stroke="#02A257" strokeWidth="2.5"/>
+      <circle cx="16" cy="16" r="6" stroke="#02A257" strokeWidth="2"/>
+    </svg>
+  ),
+  'Semi': (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <ellipse cx="16" cy="16" rx="13" ry="8" stroke="#02A257" strokeWidth="2.5"/>
+      <ellipse cx="16" cy="16" rx="6" ry="3.5" fill="#02A257"/>
+    </svg>
+  ),
+  'Marathon': (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <ellipse cx="16" cy="16" rx="13" ry="8" stroke="#02A257" strokeWidth="2.5"/>
+      <ellipse cx="16" cy="16" rx="8" ry="4.5" stroke="#02A257" strokeWidth="2"/>
+      <ellipse cx="16" cy="16" rx="3" ry="1.5" fill="#02A257"/>
+    </svg>
+  ),
+}
+
+const SUGGESTED_PLANS = [
+  { distance: '5K',       label: '5K',           semaines: '6 semaines',  volume: '25 km/sem' },
+  { distance: '10K',      label: '10K',           semaines: '8 semaines',  volume: '35 km/sem' },
+  { distance: 'Semi',     label: 'Semi-Marathon', semaines: '12 semaines', volume: '50 km/sem' },
+  { distance: 'Marathon', label: 'Marathon',      semaines: '16 semaines', volume: '65 km/sem' },
+]
+
 const T = {
   card:    { background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px' },
   label:   { fontSize: '0.7rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em' },
@@ -989,21 +1024,20 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
               <PlanSection plan={plans[selectedPlanIdx]} onAbandon={setConfirmAbandon} />
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                {[
-                  { distance: '5K',       semaines: '6 semaines',  volume: '25 km/sem' },
-                  { distance: '10K',      semaines: '8 semaines',  volume: '35 km/sem' },
-                  { distance: 'Semi',     semaines: '12 semaines', volume: '50 km/sem' },
-                  { distance: 'Marathon', semaines: '16 semaines', volume: '65 km/sem' },
-                ].map(p => (
-                  <Link
-                    key={p.distance}
-                    href={`/onboarding?distance=${p.distance}`}
-                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem', opacity: 0.75 }}
+                {SUGGESTED_PLANS.map(p => (
+                  <Link key={p.distance} href={`/onboarding?distance=${p.distance}`}
+                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', opacity: 0.75 }}
                   >
-                    <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.distance === 'Semi' ? 'Semi-Marathon' : p.distance}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.semaines}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.volume}</div>
-                    <div style={{ marginTop: '0.25rem', fontSize: '0.78rem', fontWeight: '600', color: '#02A257' }}>Créer ce plan →</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        {DISTANCE_ICONS[p.distance]}
+                        <div>
+                          <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.label}</div>
+                          <div style={{ fontSize: '0.72rem', color: '#b0b3c1' }}>{p.semaines} · {p.volume}</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: '#b0b3c1', flexShrink: 0 }}>→</span>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -1021,21 +1055,20 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
               </div>
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                {[
-                  { distance: '5K',      semaines: '6 semaines',  volume: '25 km/sem' },
-                  { distance: '10K',     semaines: '8 semaines',  volume: '35 km/sem' },
-                  { distance: 'Semi',    semaines: '12 semaines', volume: '50 km/sem' },
-                  { distance: 'Marathon',semaines: '16 semaines', volume: '65 km/sem' },
-                ].map(p => (
-                  <Link
-                    key={p.distance}
-                    href={`/onboarding?distance=${p.distance}`}
-                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem', opacity: 0.75 }}
+                {SUGGESTED_PLANS.map(p => (
+                  <Link key={p.distance} href={`/onboarding?distance=${p.distance}`}
+                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', opacity: 0.75 }}
                   >
-                    <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.distance === 'Semi' ? 'Semi-Marathon' : p.distance === 'Marathon' ? 'Marathon' : p.distance}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.semaines}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.volume}</div>
-                    <div style={{ marginTop: '0.25rem', fontSize: '0.78rem', fontWeight: '600', color: '#02A257' }}>Créer ce plan →</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        {DISTANCE_ICONS[p.distance]}
+                        <div>
+                          <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.label}</div>
+                          <div style={{ fontSize: '0.72rem', color: '#b0b3c1' }}>{p.semaines} · {p.volume}</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: '#b0b3c1', flexShrink: 0 }}>→</span>
+                    </div>
                   </Link>
                 ))}
               </div>
