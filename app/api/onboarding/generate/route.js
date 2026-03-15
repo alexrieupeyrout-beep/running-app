@@ -217,11 +217,18 @@ function generatePlan(data) {
     }
 
     // ── Renforcement musculaire ──
+    // Pour les avancés : double séance possible sur un jour facile (matin run + soir renfo)
+    const easyRunDays = seances
+      .filter(s => ['Footing léger', 'Récupération active'].includes(s.type))
+      .map(s => s.jour)
+    const canDouble = level === 'avance' && easyRunDays.length > 0
     const addRenfo = (level === 'intermediaire' || level === 'avance')
       && (phase === 'fondation' || phase === 'developpement')
-      && !isTaperW && availableDays.length > 0
+      && !isTaperW && (canDouble || availableDays.length > 0)
+    const renfoIsDouble = addRenfo && canDouble
+
     if (addRenfo) {
-      const jourRenfo = availableDays[0]
+      const jourRenfo = renfoIsDouble ? easyRunDays[0] : availableDays[0]
       const renfoVariants = [
         { description: 'Gainage et mobilité',      details: '3×1 min gainage planche, 3×20 squats, 3×15 fentes, étirements dynamiques 10 min' },
         { description: 'Renforcement bas du corps', details: '4×12 squats, 3×10 fentes bulgares, 3×15 mollets, 3×1 min pont fessier' },
@@ -229,8 +236,14 @@ function generatePlan(data) {
         { description: 'Renforcement global',       details: '3×15 squats, 3×12 fentes, 2×1 min gainage latéral, 3×10 Nordic curl, étirements 10 min' },
       ]
       const rv = renfoVariants[w % renfoVariants.length]
+      if (renfoIsDouble) {
+        // Marquer le footing du matin comme 'matin'
+        const easyIdx = seances.findIndex(s => s.jour === jourRenfo && ['Footing léger', 'Récupération active'].includes(s.type))
+        if (easyIdx >= 0) seances[easyIdx].moment = 'matin'
+      }
       seances.push({
         jour: jourRenfo,
+        moment: renfoIsDouble ? 'soir' : null,
         type: 'Renforcement musculaire',
         description: rv.description,
         distance_km: 0,
@@ -242,10 +255,12 @@ function generatePlan(data) {
     }
 
     // ── Sortie vélo ──
+    // Si renforcement est en double séance, il n'utilise pas un availableDay
+    const renfoUsesAvailableDay = addRenfo && !renfoIsDouble
     const addVelo = isRecovery && (level === 'intermediaire' || level === 'avance')
-      && availableDays.length > (addRenfo ? 1 : 0)
+      && availableDays.length > (renfoUsesAvailableDay ? 1 : 0)
     if (addVelo) {
-      const jourVelo = availableDays[addRenfo ? 1 : 0]
+      const jourVelo = availableDays[renfoUsesAvailableDay ? 1 : 0]
       seances.push({
         jour: jourVelo,
         type: 'Sortie vélo',

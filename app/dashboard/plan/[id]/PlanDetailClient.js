@@ -857,7 +857,7 @@ export default function PlanDetailClient({ plan }) {
                     <SessionShape type={s.type} size={32} />
                     <div>
                       <div style={{ fontWeight: '700', fontSize: '1.05rem', color: '#282830' }}>{s.type}</div>
-                      <div style={{ fontSize: '0.78rem', color: '#9ea0ae', marginTop: '0.1rem' }}>{s.jour} · {getSessionDate(s.jour)}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#9ea0ae', marginTop: '0.1rem' }}>{s.jour} · {getSessionDate(s.jour)}{s.moment ? ` · ${s.moment === 'matin' ? 'Matin' : 'Soir'}` : ''}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1116,7 +1116,7 @@ export default function PlanDetailClient({ plan }) {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.65rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
-                      {seance.jour?.slice(0, 3)} · {getSessionDate(seance.jour)}
+                      {seance.jour?.slice(0, 3)} · {getSessionDate(seance.jour)}{seance.moment ? ` · ${seance.moment === 'matin' ? 'Matin' : 'Soir'}` : ''}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: '600', fontSize: '0.9rem', color: (strava || done) ? '#b0b3c1' : '#282830' }}>{seance.type}</span>
