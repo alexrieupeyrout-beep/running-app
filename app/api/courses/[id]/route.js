@@ -14,10 +14,13 @@ export async function DELETE(request, { params }) {
 export async function PATCH(request, { params }) {
   const { id } = await params
   const body = await request.json()
+  console.log('[PATCH courses] id:', id, 'body:', body)
   const update = {}
   if (body.rpe !== undefined) update.rpe = body.rpe
   if (body.note !== undefined) update.note = body.note
   if (body.is_favorite !== undefined) update.is_favorite = body.is_favorite
-  await supabase.from('courses').update(update).eq('id', id)
-  return Response.json({ success: true })
+  const { data, error } = await supabase.from('courses').update(update).eq('id', id).select()
+  console.log('[PATCH courses] result:', data, 'error:', error)
+  if (error) return Response.json({ success: false, error: error.message }, { status: 500 })
+  return Response.json({ success: true, updated: data })
 }
