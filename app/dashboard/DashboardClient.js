@@ -254,28 +254,23 @@ function PlanSection({ plan, onAbandon }) {
           </div>
 
           {/* Ligne 3 — Stats */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: '1.25rem' }}>
-              {[
-                { label: 'Semaines', value: `${currentWeek}/${totalWeeks}` },
-                { label: 'Séances', value: `${completedSessions}/${totalSessions}` },
-              ].map(s => (
-                <div key={s.label}>
-                  <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{s.label}</div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#282830', marginTop: '0.1rem' }}>{s.value}</div>
-                </div>
-              ))}
-              <button onClick={e => { e.stopPropagation(); setConfOpen(true) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
-                <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Confiance</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.1rem' }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: confStyle.bar, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: confStyle.text }}>{confidence.label}</span>
-                </div>
-              </button>
-            </div>
-            <Link href={`/dashboard/plan/${plan.id}`} style={{ fontSize: '0.78rem', fontWeight: '600', color: '#02A257', textDecoration: 'none' }}>
-              Voir les séances →
-            </Link>
+          <div style={{ display: 'flex', gap: '1.25rem' }}>
+            {[
+              { label: 'Semaines', value: `${currentWeek}/${totalWeeks}` },
+              { label: 'Séances', value: `${completedSessions}/${totalSessions}` },
+            ].map(s => (
+              <div key={s.label}>
+                <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{s.label}</div>
+                <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#282830', marginTop: '0.1rem' }}>{s.value}</div>
+              </div>
+            ))}
+            <button onClick={e => { e.stopPropagation(); setConfOpen(true) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
+              <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Confiance</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.1rem' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: confStyle.bar, display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: confStyle.text }}>{confidence.label}</span>
+              </div>
+            </button>
           </div>
 
         </div>
