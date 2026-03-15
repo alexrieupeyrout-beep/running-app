@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Settings, XCircle, PauseCircle } from 'lucide-react'
+import { Settings, XCircle, PauseCircle, Bike, Dumbbell, Footprints, Waves, Zap, Mountain, Activity, Leaf } from 'lucide-react'
 
 const INTENSITE_COLORS = {
   'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
@@ -75,20 +75,18 @@ function SessionShape({ type, size = 28 }) {
   )
 }
 
-const ACTIVITY_ICONS = {
-  'Run':           '🏃',
-  'Ride':          '🚴',
-  'VirtualRide':   '🚴',
-  'Walk':          '🚶',
-  'Hike':          '🚶',
-  'Swim':          '🏊',
-  'WeightTraining':'💪',
-  'Yoga':          '🧘',
-  'Workout':       '💪',
-  'EBikeRide':     '🚴',
-  'Rowing':        '🚣',
+function ActivityIcon({ type, size = 18 }) {
+  const c = '#02A257'
+  const props = { size, color: c, strokeWidth: 1.75 }
+  if (type === 'Ride' || type === 'VirtualRide' || type === 'EBikeRide') return <Bike {...props} />
+  if (type === 'Run' || type === 'VirtualRun') return <Zap {...props} />
+  if (type === 'Trail') return <Mountain {...props} />
+  if (type === 'Walk' || type === 'Hike') return <Footprints {...props} />
+  if (type === 'Swim') return <Waves {...props} />
+  if (type === 'WeightTraining' || type === 'Workout') return <Dumbbell {...props} />
+  if (type === 'Yoga') return <Leaf {...props} />
+  return <Activity {...props} />
 }
-function activityIcon(type) { return ACTIVITY_ICONS[type] || '🏃' }
 
 function StravaLogo({ size = 14 }) {
   return (
@@ -540,6 +538,9 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
     setRpAddOpen(false)
     setRpForm({ distance: '10K', date: '', chrono: '' })
   }
+  const [chartRange, setChartRange] = useState('8sem')
+  const [chartType, setChartType] = useState('all')
+  const [chartMetric, setChartMetric] = useState('km')
   const [periode, setPeriode] = useState('tout')
   const [distanceMin, setDistanceMin] = useState('')
   const [distanceMax, setDistanceMax] = useState('')
@@ -547,6 +548,9 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [dureeMax, setDureeMax] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [confirmAbandon, setConfirmAbandon] = useState(null)
+  const [activitiesExpanded, setActivitiesExpanded] = useState(false)
+  const [activitiesType, setActivitiesType] = useState('all')
+  const [activitiesPeriode, setActivitiesPeriode] = useState('tout')
   const [abandonLoading, setAbandonLoading] = useState(false)
 
   const now = new Date()
@@ -614,6 +618,27 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   return (
     <div style={{ minHeight: '100vh', background: '#f0faf5', fontFamily: 'system-ui, sans-serif' }}>
       <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
+
+      {/* ── Feedback card (fixed bas droite) ── */}
+      <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 50, background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.1rem 1.25rem', boxShadow: '0 4px 24px rgba(40,40,48,0.12)', maxWidth: '240px' }}>
+        {/* Coach photo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.65rem' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid #c5e6d5' }}>
+            <img src="/coach.png" alt="Coach" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: '700', color: '#282830', fontSize: '0.85rem', lineHeight: 1.2 }}>Discovery in progress</div>
+            <div style={{ fontSize: '0.65rem', color: '#02A257', fontWeight: '600', marginTop: '0.1rem' }}>Le coach est sur le coup</div>
+          </div>
+        </div>
+        <div style={{ fontSize: '0.74rem', color: '#9ea0ae', lineHeight: 1.55, marginBottom: '0.75rem' }}>Une idée, un bug, un manque ? On construit VITE avec toi.</div>
+        <button
+          onClick={() => window.Tally?.openPopup('5B2X2Z', { layout: 'modal', width: 600, autoClose: 3000 })}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%', padding: '0.5rem', borderRadius: '10px', background: '#02A257', color: 'white', fontSize: '0.76rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+        >
+          Partager mon avis →
+        </button>
+      </div>
 
       {/* ── Sticky header ────────────────────────────── */}
       <div style={{ position: 'sticky', top: 0, background: 'white', borderBottom: '1px solid #c5e6d5', zIndex: 10 }}>
@@ -966,63 +991,340 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1.25rem 3rem' }}>
 
         {/* ── Tab: Dashboard ── */}
-        {activeTab === 'dashboard' && (
-          <div style={{ position: 'relative', minHeight: '400px' }}>
+        {activeTab === 'dashboard' && (() => {
+          const today = new Date()
+          const activePlan = plans?.[0] || null
 
-            {/* Overlay "En cours de spec" */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)', borderRadius: '16px' }}>
-              <div style={{ background: 'white', border: '1px solid #c5e6d5', borderRadius: '16px', padding: '1.5rem 2rem', textAlign: 'center', boxShadow: '0 4px 24px rgba(40,40,48,0.1)', maxWidth: '320px' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'white', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                    <svg width="30" height="30" viewBox="0 0 52 52" fill="none">
-                      <rect x="4" y="14" width="44" height="24" rx="12" stroke="#02A257" strokeWidth="5" fill="none"/>
-                    </svg>
+          // Début de la semaine courante (lundi)
+          const dayOfWeek = today.getDay()
+          const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek)
+          const weekStart = new Date(today)
+          weekStart.setHours(0, 0, 0, 0)
+          weekStart.setDate(today.getDate() + diffToMonday)
+
+          // Activités de la semaine
+          const weekCourses = (courses || []).filter(c => c.date && new Date(c.date) >= weekStart)
+          const weekKm = weekCourses.reduce((s, c) => s + (c.distance_km || 0), 0)
+          const weekRuns = weekCourses.filter(c => ['Run', 'Trail', 'VirtualRun'].includes(c.type_activite) || !c.type_activite)
+
+          // Allure moy de la semaine
+          const paceCourses = weekRuns.filter(c => c.allure_moyenne)
+          const avgPace = paceCourses.length > 0
+            ? paceCourses.reduce((s, c) => s + c.allure_moyenne, 0) / paceCourses.length
+            : null
+          const fmtPaceVal = (p) => { const m = Math.floor(p); const s = Math.round((p - m) * 60); return `${m}:${String(s).padStart(2,'0')}` }
+
+          // Plan : mini status
+          let planStatus = null
+          if (activePlan?.semaines?.length) {
+            const weekIdx = activePlan.created_at
+              ? Math.min(Math.floor((today - new Date(activePlan.created_at)) / (1000 * 60 * 60 * 24 * 7)), activePlan.semaines.length - 1)
+              : 0
+            const week = activePlan.semaines[weekIdx]
+            const seances = week?.seances || []
+            const done = seances.filter(s => s.completed || s.strava_activity || s.manual_activity).length
+            const next = seances.find(s => !s.completed && !s.strava_activity && !s.manual_activity && s.type !== 'Jour de repos')
+            planStatus = { weekIdx: weekIdx + 1, total: activePlan.semaines.length, done, count: seances.length, next, distance: activePlan.distance }
+          }
+
+          // Graphique
+          const RUN_TYPES = ['Run', 'Trail', 'VirtualRun']
+          const VELO_TYPES = ['Ride', 'VirtualRide', 'EBikeRide']
+          const useMonths = chartRange === '6mois' || chartRange === '1an'
+          const monthCount = chartRange === '6mois' ? 6 : 12
+          const weekCount = chartRange === '4sem' ? 4 : 8
+
+          const filterActivity = (c) => {
+            if (chartType === 'run') return RUN_TYPES.includes(c.type_activite) || !c.type_activite
+            if (chartType === 'velo') return VELO_TYPES.includes(c.type_activite)
+            return true
+          }
+          const computeMetric = (items) => {
+            if (chartMetric === 'km') return Math.round(items.reduce((s, c) => s + (c.distance_km || 0), 0) * 10) / 10
+            if (chartMetric === 'sorties') return items.length
+            if (chartMetric === 'duree') return Math.round(items.reduce((s, c) => s + (c.duree_minutes || 0), 0))
+            return 0
+          }
+          const fmtMetric = (val) => {
+            if (val <= 0) return ''
+            if (chartMetric === 'duree') {
+              const h = Math.floor(val / 60); const m = val % 60
+              return h > 0 ? `${h}h${m > 0 ? m : ''}` : `${m}m`
+            }
+            return `${val}`
+          }
+
+          const bars = useMonths
+            ? Array.from({ length: monthCount }, (_, i) => {
+                const d = new Date(today.getFullYear(), today.getMonth() - (monthCount - 1 - i), 1)
+                const mStart = new Date(d.getFullYear(), d.getMonth(), 1)
+                const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+                const items = (courses || []).filter(c => c.date && new Date(c.date) >= mStart && new Date(c.date) < mEnd && filterActivity(c))
+                const MOIS = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc']
+                return { val: computeMetric(items), isCurrent: i === monthCount - 1, label: MOIS[d.getMonth()] }
+              })
+            : Array.from({ length: weekCount }, (_, i) => {
+                const wStart = new Date(weekStart)
+                wStart.setDate(wStart.getDate() - (7 * (weekCount - 1 - i)))
+                const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 7)
+                const items = (courses || []).filter(c => c.date && new Date(c.date) >= wStart && new Date(c.date) < wEnd && filterActivity(c))
+                return { val: computeMetric(items), isCurrent: i === weekCount - 1, label: `${wStart.getDate()}/${wStart.getMonth() + 1}` }
+              })
+          const maxVal = Math.max(...bars.map(b => b.val), 1)
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+              {/* Mini rappel plan */}
+              {planStatus && (
+                <button onClick={() => setActiveTab('plan')} style={{ ...T.card, padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: '700', background: '#f0fdf4', color: '#02A257', border: '1px solid #c5e6d5', padding: '0.2rem 0.55rem', borderRadius: '99px' }}>{planStatus.distance}</span>
+                    <span style={{ fontSize: '0.82rem', color: '#656779' }}>Semaine {planStatus.weekIdx}/{planStatus.total} · <span style={{ color: planStatus.done === planStatus.count ? '#02A257' : '#282830', fontWeight: '600' }}>{planStatus.done}/{planStatus.count} séances</span>{planStatus.next ? ` · Prochaine : ${planStatus.next.jour?.slice(0,3)}` : ''}</span>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: '#02A257', fontWeight: '700' }}>→</span>
+                </button>
+              )}
+
+              {/* Stats semaine */}
+              <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Cette semaine</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                {[
+                  { label: 'Kilomètres', value: weekKm > 0 ? `${Math.round(weekKm * 10) / 10}` : '—', unit: weekKm > 0 ? 'km' : '' },
+                  { label: 'Sorties', value: weekRuns.length > 0 ? `${weekRuns.length}` : '—', unit: '' },
+                  { label: 'Allure moy.', value: avgPace ? fmtPaceVal(avgPace) : '—', unit: avgPace ? '/km' : '' },
+                ].map(({ label, value, unit }) => (
+                  <div key={label} style={{ ...T.card, padding: '1rem 1.1rem' }}>
+                    <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.4rem' }}>{label}</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#282830', lineHeight: 1 }}>{value}<span style={{ fontSize: '0.7rem', fontWeight: '500', color: '#9ea0ae', marginLeft: '2px' }}>{unit}</span></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Graphique */}
+              <div style={{ ...T.card, padding: '1.1rem 1.1rem 0.85rem' }}>
+                {/* Header filtres */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {/* Métrique */}
+                  <div style={{ display: 'flex', background: '#f5f5f7', borderRadius: '8px', padding: '2px', gap: '2px' }}>
+                    {[
+                      { key: 'km', label: 'km' },
+                      { key: 'sorties', label: 'sorties' },
+                      { key: 'duree', label: 'durée' },
+                    ].map(({ key, label }) => (
+                      <button key={key} onClick={() => setChartMetric(key)} style={{ padding: '0.25rem 0.65rem', borderRadius: '6px', border: 'none', background: chartMetric === key ? 'white' : 'transparent', color: chartMetric === key ? '#282830' : '#9ea0ae', fontSize: '0.72rem', fontWeight: chartMetric === key ? '700' : '500', cursor: 'pointer', boxShadow: chartMetric === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Période + type */}
+                  <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                    {[
+                      { key: 'all', label: 'Tout' },
+                      { key: 'run', label: '🏃' },
+                      { key: 'velo', label: '🚴' },
+                    ].map(({ key, label }) => (
+                      <button key={key} onClick={() => setChartType(key)} style={{ padding: '0.22rem 0.5rem', borderRadius: '6px', border: `1px solid ${chartType === key ? '#02A257' : '#e8e8e8'}`, background: chartType === key ? '#f0faf5' : 'white', color: chartType === key ? '#02A257' : '#9ea0ae', fontSize: '0.7rem', fontWeight: chartType === key ? '700' : '400', cursor: 'pointer' }}>{label}</button>
+                    ))}
+                    <div style={{ width: '1px', height: '16px', background: '#e8e8e8' }} />
+                    {[
+                      { key: '4sem', label: '4S' },
+                      { key: '8sem', label: '8S' },
+                      { key: '6mois', label: '6M' },
+                      { key: '1an', label: '1A' },
+                    ].map(({ key, label }) => (
+                      <button key={key} onClick={() => setChartRange(key)} style={{ padding: '0.22rem 0.5rem', borderRadius: '6px', border: `1px solid ${chartRange === key ? '#02A257' : '#e8e8e8'}`, background: chartRange === key ? '#f0faf5' : 'white', color: chartRange === key ? '#02A257' : '#9ea0ae', fontSize: '0.7rem', fontWeight: chartRange === key ? '700' : '400', cursor: 'pointer' }}>{label}</button>
+                    ))}
                   </div>
                 </div>
-                <div style={{ fontWeight: '700', color: '#282830', fontSize: '1rem', marginBottom: '0.4rem' }}>En train de courir !</div>
-                <div style={{ fontSize: '0.82rem', color: '#9ea0ae', lineHeight: 1.55, marginBottom: '1.1rem' }}>L'équipe produit bosse d'arrache pied sur la discovery, si tu as des idées, n'hésite pas ! Penses-y en courant !</div>
-                <button
-                  onClick={() => window.Tally?.openPopup('5B2X2Z', { layout: 'modal', width: 600, autoClose: 3000 })}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.1rem', borderRadius: '10px', background: '#02A257', color: 'white', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
-                >
-                  J'ai plein d'idées →
-                </button>
-              </div>
-            </div>
 
-            {/* Grayed content */}
-            <div style={{ opacity: 0.25, pointerEvents: 'none', userSelect: 'none' }}>
-              {/* Filters */}
-              <div style={{ ...T.card, padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                  {[['tout', 'Tout'], ['semaine', 'Semaine'], ['mois', 'Mois'], ['annee', 'Année']].map(([val, label]) => (
-                    <button key={val} style={periodeBtn(val === 'tout')}>{label}</button>
+                {/* Barres */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: bars.length > 8 ? '3px' : '5px', height: '90px' }}>
+                  {bars.map((b, i) => {
+                    const barH = Math.max((b.val / maxVal) * 72, b.val > 0 ? 4 : 0)
+                    const fmt = fmtMetric(b.val)
+                    return (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', gap: '2px' }}>
+                        {fmt && (
+                          <span style={{ fontSize: bars.length > 8 ? '0.42rem' : '0.5rem', color: b.isCurrent ? '#02A257' : '#b0b3c1', fontWeight: '600', lineHeight: 1, whiteSpace: 'nowrap' }}>
+                            {fmt}
+                          </span>
+                        )}
+                        <div style={{ width: '100%', borderRadius: '3px 3px 0 0', background: b.isCurrent ? '#02A257' : '#daf0e8', height: `${barH}px`, minHeight: b.val > 0 ? '4px' : '0', transition: 'height 0.3s' }} />
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Labels */}
+                <div style={{ display: 'flex', borderTop: '1px solid #f5f5f5', marginTop: '5px', paddingTop: '4px' }}>
+                  {bars.map((b, i) => (
+                    <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: bars.length > 8 ? '0.42rem' : '0.5rem', color: b.isCurrent ? '#02A257' : '#c0c2cc', fontWeight: b.isCurrent ? '700' : '400' }}>
+                      {b.label}
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                {['Kilomètres', 'Courses', 'Allure moy.', 'FC moyenne', 'Dénivelé'].map((label) => (
-                  <div key={label} style={{ ...T.card, padding: '1rem 1.1rem', borderLeft: '3px solid #02A257' }}>
-                    <div style={{ ...T.label, marginBottom: '0.4rem' }}>{label}</div>
-                    <div style={{ fontSize: '1.45rem', fontWeight: '700', color: '#282830' }}>—</div>
-                  </div>
-                ))}
-              </div>
+              {/* Activités récentes */}
+              {(() => {
+                const RUN_TYPES_ACT = ['Run', 'Trail', 'VirtualRun']
+                const VELO_TYPES_ACT = ['Ride', 'VirtualRide', 'EBikeRide']
+                const OTHER_TYPES_ACT = ['Walk', 'Hike', 'Swim', 'WeightTraining', 'Workout', 'Yoga', 'Rowing']
 
-              {/* Graphique placeholder */}
-              <div style={{ ...T.card, padding: '1.25rem', marginBottom: '1.25rem', height: '180px' }} />
+                const periodeStart = (() => {
+                  const d = new Date(today)
+                  if (activitiesPeriode === '7j') { d.setDate(d.getDate() - 7); return d }
+                  if (activitiesPeriode === '30j') { d.setDate(d.getDate() - 30); return d }
+                  if (activitiesPeriode === '3mois') { d.setMonth(d.getMonth() - 3); return d }
+                  return null
+                })()
 
-              {/* Courses placeholder */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} style={{ ...T.card, padding: '1rem 1.25rem', height: '58px' }} />
-                ))}
-              </div>
+                const allCourses = [...(courses || [])]
+                  .filter(c => {
+                    if (!c.date) return false
+                    if (periodeStart && new Date(c.date) < periodeStart) return false
+                    if (activitiesType === 'run') return RUN_TYPES_ACT.includes(c.type_activite) || !c.type_activite
+                    if (activitiesType === 'velo') return VELO_TYPES_ACT.includes(c.type_activite)
+                    if (activitiesType === 'autre') return OTHER_TYPES_ACT.includes(c.type_activite)
+                    return true
+                  })
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                const recentCourses = activitiesExpanded ? allCourses : allCourses.slice(0, 5)
+
+                const fmtDuree = (min) => {
+                  if (!min) return null
+                  const h = Math.floor(min / 60); const m = min % 60
+                  return h > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${m}min`
+                }
+                const fmtAllure = (a) => {
+                  if (!a) return null
+                  const m = Math.floor(a); const s = Math.round((a - m) * 60)
+                  return `${m}'${String(s).padStart(2,'0')}"/km`
+                }
+                const TYPE_LABEL = {
+                  'Run': 'Course', 'Trail': 'Trail', 'VirtualRun': 'Course virtuelle',
+                  'Ride': 'Vélo', 'VirtualRide': 'Vélo virtuel', 'EBikeRide': 'Vélo électrique',
+                  'Walk': 'Marche', 'Hike': 'Randonnée', 'Swim': 'Natation',
+                  'WeightTraining': 'Renforcement', 'Workout': 'Workout',
+                }
+                const TYPE_COLOR = {
+                  'Run': '#02A257', 'Trail': '#059669', 'VirtualRun': '#02A257',
+                  'Ride': '#2563eb', 'VirtualRide': '#2563eb', 'EBikeRide': '#0891b2',
+                  'Walk': '#9ea0ae', 'Hike': '#d97706', 'Swim': '#0891b2',
+                  'WeightTraining': '#7c3aed', 'Workout': '#7c3aed',
+                }
+
+                return (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Activités récentes</div>
+                      <span style={{ fontSize: '0.7rem', color: '#9ea0ae' }}>{allCourses.length} activité{allCourses.length !== 1 ? 's' : ''}</span>
+                    </div>
+
+                    {/* Filtres */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {/* Type */}
+                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                        {[
+                          { key: 'all',   label: 'Tout' },
+                          { key: 'run',   label: '🏃 Course' },
+                          { key: 'velo',  label: '🚴 Vélo' },
+                          { key: 'autre', label: '💪 Autre' },
+                        ].map(({ key, label }) => (
+                          <button key={key} onClick={() => { setActivitiesType(key); setActivitiesExpanded(false) }}
+                            style={{ padding: '0.28rem 0.7rem', borderRadius: '99px', border: `1.5px solid ${activitiesType === key ? '#02A257' : '#e8e8e8'}`, background: activitiesType === key ? '#02A257' : 'white', color: activitiesType === key ? 'white' : '#656779', fontSize: '0.75rem', fontWeight: activitiesType === key ? '600' : '400', cursor: 'pointer' }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Période */}
+                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                        {[
+                          { key: 'tout',  label: 'Tout' },
+                          { key: '7j',    label: '7 jours' },
+                          { key: '30j',   label: '30 jours' },
+                          { key: '3mois', label: '3 mois' },
+                        ].map(({ key, label }) => (
+                          <button key={key} onClick={() => { setActivitiesPeriode(key); setActivitiesExpanded(false) }}
+                            style={{ padding: '0.28rem 0.7rem', borderRadius: '99px', border: `1.5px solid ${activitiesPeriode === key ? '#282830' : '#e8e8e8'}`, background: activitiesPeriode === key ? '#282830' : 'white', color: activitiesPeriode === key ? 'white' : '#656779', fontSize: '0.75rem', fontWeight: activitiesPeriode === key ? '600' : '400', cursor: 'pointer' }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {recentCourses.length === 0 ? (
+                      <div style={{ ...T.card, padding: '2rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🏃</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#282830', marginBottom: '0.25rem' }}>Aucune activité</div>
+                        <div style={{ fontSize: '0.78rem', color: '#9ea0ae' }}>Connecte Strava ou ajoute une course manuellement.</div>
+                      </div>
+                    ) : (
+                      <div style={{ ...T.card, overflow: 'hidden' }}>
+                        {recentCourses.map((c, i) => {
+                          const typeLabel = TYPE_LABEL[c.type_activite] || 'Activité'
+                          const typeColor = TYPE_COLOR[c.type_activite] || '#9ea0ae'
+                          const date = new Date(c.date)
+                          const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+                          return (
+                            <div key={c.id || i} style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.85rem 1.1rem', borderBottom: '1px solid #f5f5f7' }}>
+                              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f0faf5', border: '1px solid #c5e6d5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <ActivityIcon type={c.type_activite} size={20} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#282830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {c.nom || typeLabel}
+                                </div>
+                                <div style={{ fontSize: '0.7rem', color: '#9ea0ae', marginTop: '0.1rem' }}>{dateStr}</div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexShrink: 0 }}>
+                                {c.distance_km > 0 && (() => {
+                                  const isVelo = ['Ride', 'VirtualRide', 'EBikeRide'].includes(c.type_activite)
+                                  const speedKmh = isVelo && c.duree_minutes > 0
+                                    ? Math.round((c.distance_km / (c.duree_minutes / 60)) * 10) / 10
+                                    : null
+                                  return (
+                                    <div style={{ textAlign: 'right' }}>
+                                      <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#282830' }}>{Math.round(c.distance_km * 10) / 10} <span style={{ fontSize: '0.65rem', fontWeight: '500', color: '#9ea0ae' }}>km</span></div>
+                                      {isVelo
+                                        ? speedKmh && <div style={{ fontSize: '0.65rem', color: '#9ea0ae' }}>{speedKmh} km/h</div>
+                                        : fmtAllure(c.allure_moyenne) && <div style={{ fontSize: '0.65rem', color: '#9ea0ae' }}>{fmtAllure(c.allure_moyenne)}</div>
+                                      }
+                                    </div>
+                                  )
+                                })()}
+                                {fmtDuree(c.duree_minutes) && (
+                                  <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.82rem', fontWeight: '600', color: '#656779' }}>{fmtDuree(c.duree_minutes)}</div>
+                                    {c.frequence_cardiaque_moy && <div style={{ fontSize: '0.65rem', color: '#9ea0ae' }}>{Math.round(c.frequence_cardiaque_moy)} bpm</div>}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {/* Voir plus / moins */}
+                        {allCourses.length > 5 && (
+                          <button
+                            onClick={() => setActivitiesExpanded(e => !e)}
+                            style={{ width: '100%', padding: '0.75rem', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', color: '#02A257', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
+                          >
+                            {activitiesExpanded
+                              ? <>Voir moins <span style={{ fontSize: '0.7rem', display: 'inline-block', transform: 'rotate(180deg)' }}>▾</span></>
+                              : <>Voir plus <span style={{ color: '#c0c2cc', fontWeight: '400' }}>({allCourses.length - 5} de plus)</span> <span style={{ fontSize: '0.7rem' }}>▾</span></>
+                            }
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── Tab: Plan ── */}
         {activeTab === 'plan' && (

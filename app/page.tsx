@@ -128,7 +128,7 @@ export default function Home() {
             </Link>
           </div>
           <Link
-            href="/dashboard?tab=plan"
+            href="/dashboard"
             className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#02A257] hover:bg-[#019048] transition-colors px-4 py-2 rounded-xl"
           >
             Dashboard
@@ -222,6 +222,27 @@ export default function Home() {
               <div className="text-[#656779] text-sm leading-relaxed">{f.desc}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Marc Madiot testimonial */}
+      <div className="max-w-4xl mx-auto px-6 pb-12">
+        <div style={{ background: "white", border: "1px solid #c5e6d5", borderRadius: "20px", padding: "1.5rem", display: "flex", alignItems: "center", gap: "1.25rem", boxShadow: "0 4px 16px rgba(2,162,87,0.07)" }}>
+          <div style={{ width: "64px", height: "64px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid #c5e6d5" }}>
+            <Image src="/marc.webp" alt="Marc" width={64} height={64} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: "0.88rem", color: "#282830", fontWeight: 500, lineHeight: 1.6, marginBottom: "0.5rem" }}>
+              <span style={{ color: "#02A257", fontWeight: 700 }}>"</span>Je ne cours pas, mais si je devais courir, je ferais un plan avec VITE. Thibaut qui est si grand, a utilisé VITE dans sa rotation de séances.<span style={{ color: "#02A257", fontWeight: 700 }}>"</span>
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#282830" }}>Marc M.</span>
+              <span style={{ fontSize: "0.68rem", color: "#9ea0ae" }}>Manager Groupama-FDJ · Tour de France</span>
+              <div style={{ display: "flex", gap: "1px", marginLeft: "auto" }}>
+                {[...Array(5)].map((_, i) => <span key={i} style={{ color: "#f59e0b", fontSize: "0.7rem" }}>★</span>)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
