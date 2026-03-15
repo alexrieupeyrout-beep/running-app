@@ -1,0 +1,28 @@
+'use client'
+import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+
+export default function AuthCallback() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const code = searchParams.get('code')
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(() => {
+        router.replace('/dashboard')
+      })
+    } else {
+      router.replace('/signup')
+    }
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-[#f0faf5] flex items-center justify-center">
+      <div style={{ textAlign: 'center', color: '#9ea0ae', fontSize: '0.9rem' }}>
+        Connexion en cours…
+      </div>
+    </div>
+  )
+}

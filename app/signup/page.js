@@ -1,24 +1,47 @@
 'use client'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
-
-const inputStyle = {
-  width: '100%', padding: '0.6rem 0.85rem', borderRadius: '10px',
-  border: '1.5px solid #e8e8e8', fontSize: '0.88rem', color: '#c0c2cc',
-  background: '#f7f7f8', boxSizing: 'border-box', outline: 'none', cursor: 'not-allowed',
-}
-
-const labelStyle = {
-  display: 'block', fontSize: '0.7rem', fontWeight: '600',
-  color: '#c0c2cc', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.35rem',
-}
+import { ArrowRight, Mail, CheckCircle } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export default function Signup() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard')
+    })
+  }, [])
+
+  async function handleMagicLink(e) {
+    e.preventDefault()
+    if (!email) return
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    setLoading(false)
+    if (error) {
+      setError('Une erreur est survenue. Vérifie ton adresse email.')
+    } else {
+      setSent(true)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f0faf5] flex flex-col">
       {/* Nav */}
       <nav className="bg-white border-b border-[#c5e6d5]">
-        <div className="max-w-2xl mx-auto w-full px-4 sm:px-6" style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="max-w-2xl mx-auto w-full px-4 sm:px-6" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <span className="text-[#02A257] font-black text-2xl tracking-tight">VITE</span>
           </Link>
@@ -44,7 +67,7 @@ export default function Signup() {
             </p>
           </div>
 
-          {/* CTA principal */}
+          {/* CTA sans compte */}
           <Link
             href="/onboarding"
             style={{
@@ -67,48 +90,78 @@ export default function Signup() {
             <div style={{ flex: 1, height: '1px', background: '#e8e8e8' }} />
           </div>
 
-          {/* Tab switcher grisé */}
-          <div style={{ position: 'relative' }}>
-            <div style={{ display: 'flex', background: 'white', border: '1.5px solid #e8e8e8', borderRadius: '12px', padding: '4px', opacity: 0.45, pointerEvents: 'none' }}>
-              {['Créer un compte', 'Se connecter'].map((label, i) => (
-                <div
-                  key={label}
+          {/* Formulaire magic link */}
+          {sent ? (
+            <div style={{
+              background: 'white', border: '1.5px solid #c5e6d5', borderRadius: '20px',
+              padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: '0.75rem', textAlign: 'center',
+            }}>
+              <CheckCircle size={36} color="#02A257" strokeWidth={1.75} />
+              <div>
+                <p style={{ fontWeight: '700', fontSize: '0.95rem', color: '#282830', marginBottom: '0.35rem' }}>
+                  Vérifie ta boîte mail
+                </p>
+                <p style={{ fontSize: '0.82rem', color: '#9ea0ae', lineHeight: '1.5' }}>
+                  On a envoyé un lien de connexion à <strong style={{ color: '#282830' }}>{email}</strong>.<br />
+                  Clique dessus pour accéder à ton espace.
+                </p>
+              </div>
+              <button
+                onClick={() => { setSent(false); setEmail('') }}
+                style={{ fontSize: '0.78rem', color: '#02A257', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.25rem' }}
+              >
+                Utiliser une autre adresse
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleMagicLink} style={{
+              background: 'white', border: '1.5px solid #e8e8e8', borderRadius: '20px',
+              padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem',
+            }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '600', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>
+                  Adresse email
+                </label>
+                <input
+                  type="email"
+                  placeholder="ton@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
                   style={{
-                    flex: 1, padding: '0.5rem', borderRadius: '9px', textAlign: 'center',
-                    fontSize: '0.82rem', fontWeight: '600',
-                    background: i === 0 ? '#e8e8e8' : 'transparent',
-                    color: '#b0b3c1',
+                    width: '100%', padding: '0.6rem 0.85rem', borderRadius: '10px',
+                    border: '1.5px solid #e8e8e8', fontSize: '0.88rem', color: '#282830',
+                    background: '#f7f7f8', boxSizing: 'border-box', outline: 'none',
                   }}
-                >
-                  {label}
-                </div>
-              ))}
-            </div>
+                />
+              </div>
 
-            {/* Card grisée */}
-            <div style={{ marginTop: '0.75rem', background: 'white', border: '1.5px solid #e8e8e8', borderRadius: '20px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', opacity: 0.45, pointerEvents: 'none' }}>
-              <div>
-                <label style={labelStyle}>Email</label>
-                <input type="email" placeholder="ton@email.com" disabled style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Mot de passe</label>
-                <input type="password" placeholder="••••••••" disabled style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Confirmer le mot de passe</label>
-                <input type="password" placeholder="••••••••" disabled style={inputStyle} />
-              </div>
-              <div style={{ padding: '0.85rem', borderRadius: '12px', background: '#e8e8e8', textAlign: 'center', fontWeight: '700', fontSize: '0.9rem', color: '#b0b3c1' }}>
-                Créer mon compte
-              </div>
-            </div>
+              {error && (
+                <p style={{ fontSize: '0.78rem', color: '#e53e3e', margin: 0 }}>{error}</p>
+              )}
 
-            {/* Badge bientôt dispo */}
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'white', border: '1.5px solid #e8e8e8', borderRadius: '99px', padding: '0.4rem 1rem', fontSize: '0.75rem', fontWeight: '600', color: '#9ea0ae', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', whiteSpace: 'nowrap' }}>
-              Bientôt disponible
-            </div>
-          </div>
+              <button
+                type="submit"
+                disabled={loading || !email}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  padding: '0.85rem', borderRadius: '12px',
+                  background: loading || !email ? '#c5e6d5' : '#02A257',
+                  color: 'white', fontWeight: '700', fontSize: '0.88rem',
+                  border: 'none', cursor: loading || !email ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                <Mail size={15} />
+                {loading ? 'Envoi en cours…' : 'Recevoir mon lien de connexion'}
+              </button>
+
+              <p style={{ fontSize: '0.72rem', color: '#c0c2cc', textAlign: 'center', margin: 0 }}>
+                Pas de mot de passe. Un lien suffit.
+              </p>
+            </form>
+          )}
 
         </div>
       </div>
