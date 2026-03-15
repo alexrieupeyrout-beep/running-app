@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, X, Flag, BookOpen, Apple, Plus } from 'lucide-react'
 
 const INTENSITE_COLORS = {
   'facile':       { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
@@ -27,6 +27,336 @@ const FATIGUE_LEVELS = [
   { value: 5, label: 'En feu',   color: '#02A257', bg: '#f0faf5', border: '#c5e6d5' },
 ]
 
+const INTERVAL_BLOCK_TYPES = [
+  {
+    key: 'échauffement',
+    match: s => /échauff|echauff|warm/i.test(s),
+    label: 'Échauffement', color: '#d97706', bg: '#fffbeb', border: '#fde68a',
+  },
+  {
+    key: 'récup',
+    match: s => /r[ée]cup|repos/i.test(s),
+    label: 'Récupération', color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe',
+  },
+  {
+    key: 'calme',
+    match: s => /retour au calme|calme|cool/i.test(s),
+    label: 'Retour au calme', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+  },
+  {
+    key: 'effort',
+    match: s => /\d+\s*[x×]\s*\d+|allure|vma|fraction|interval/i.test(s),
+    label: 'Effort', color: '#dc2626', bg: '#fef2f2', border: '#fecaca',
+  },
+]
+
+function buildNutritionAdvice(seance) {
+  const { type, distance_km, duree_minutes } = seance
+  const isLong = duree_minutes >= 75 || distance_km >= 15
+  const isMedium = duree_minutes >= 45 || distance_km >= 8
+  const v = (hashSession ? 0 : 0) // placeholder, will use hash below
+
+  const NUTRITION = {
+    'Footing léger': [
+      {
+        avant: 'Pas besoin de repas spécifique avant cette sortie courte. Un verre d\'eau suffit. Si vous courez plus d\'1h après le repas, évitez les aliments lourds ou gras.',
+        pendant: 'Emportez de l\'eau si la sortie dépasse 45 min ou s\'il fait chaud. Sinon, rien de nécessaire.',
+        apres: 'Réhydratez-vous avec de l\'eau. Un fruit ou un yaourt suffisent pour la récupération sur ce type de séance légère.',
+      },
+      {
+        avant: 'Une sortie facile ne nécessite pas de préparation nutritionnelle particulière. Attendez au moins 1h30 après un repas pour courir confortablement.',
+        pendant: 'L\'eau est votre seul besoin. Si vous transpirez beaucoup, ajoutez une petite pincée de sel à votre gourde.',
+        apres: 'Un verre d\'eau et un encas léger (banane, poignée d\'amandes) suffisent pour bien récupérer.',
+      },
+      {
+        avant: 'Si vous courez le matin, une banane ou une tranche de pain avec du miel 30 min avant peut suffire. Si vous courez en journée, votre dernier repas est votre carburant.',
+        pendant: 'Hydratation légère si besoin. Pas de ravitaillement solide nécessaire sur cette séance.',
+        apres: 'Privilégiez un repas équilibré dans l\'heure qui suit : glucides + protéines pour recharger les stocks et réparer les muscles.',
+      },
+      {
+        avant: 'Légèreté avant tout. Évitez les aliments difficiles à digérer (légumineuses, fritures) dans les 2h précédant la sortie.',
+        pendant: 'Buvez selon votre soif. Sur une sortie facile, votre corps gère bien la déshydratation légère.',
+        apres: 'Réhydratation et un encas protéiné pour soutenir la récupération musculaire, même légère.',
+      },
+    ],
+    'Footing progressif': [
+      {
+        avant: 'Un repas léger 2h avant : flocons d\'avoine, pain complet ou riz. Évitez les fibres en excès qui pourraient causer des inconforts en fin de séance quand l\'allure monte.',
+        pendant: 'Eau suffisante. Si la séance dure plus d\'1h, une boisson légèrement sucrée peut aider sur les derniers kilomètres.',
+        apres: 'Récupération glucido-protéinée dans les 30 min : un smoothie banane + lait ou un yaourt avec des céréales.',
+      },
+      {
+        avant: 'Chargez légèrement en glucides 2h avant : une banane, du pain ou des céréales. La montée progressive en allure sollicite davantage vos réserves que le footing facile.',
+        pendant: 'Hydratez-vous régulièrement. Sur les derniers km à allure élevée, votre corps chauffe — buvez avant d\'avoir soif.',
+        apres: 'Protéines et glucides dans la demi-heure suivant la séance pour optimiser la récupération musculaire.',
+      },
+      {
+        avant: 'Repas digeste 1h30 à 2h avant. Évitez les graisses et les protéines lourdes qui ralentissent la digestion et peuvent gêner en fin de sortie.',
+        pendant: 'Eau en continu. Si vous transpirez abondamment, une boisson isotonique légère est la bienvenue.',
+        apres: 'Un repas complet dans l\'heure : pâtes ou riz + œufs ou poisson + légumes. Votre corps a travaillé, récompensez-le.',
+      },
+      {
+        avant: 'Idéalement, courez 2-3h après un repas principal. Si ce n\'est pas possible, une collation légère (banane + eau) 45 min avant fonctionne bien.',
+        pendant: 'Hydratation régulière. L\'effort final à allure élevée augmente la sudation — anticipez.',
+        apres: 'Réhydratation immédiate puis repas dans l\'heure. Incluez des protéines de qualité pour la récupération musculaire.',
+      },
+    ],
+    'Sortie longue': [
+      {
+        avant: isLong
+          ? `Chargez en glucides la veille au soir : pâtes, riz, pain complet. Le matin, 1h30 avant le départ : porridge ou pain + confiture + banane. Évitez absolument les aliments nouveaux ou difficiles à digérer.`
+          : `Un bon petit-déjeuner glucidique 1h30 à 2h avant : flocons d\'avoine, pain, banane. Pas besoin de charger excessivement.`,
+        pendant: isLong
+          ? `Buvez toutes les 20 min même sans soif (150-200 ml). À partir de 60-75 min d\'effort, prenez un gel ou une datte toutes les 40 min. Anticipez — ne mangez pas quand vous avez faim, il est déjà trop tard.`
+          : `Eau toutes les 20-25 min. Si la sortie dépasse 1h15, un gel ou quelques dattes peuvent maintenir votre énergie.`,
+        apres: `Récupération prioritaire dans les 30 min : boisson de récupération ou lait chocolaté + banane. Puis dans l\'heure, repas complet riche en protéines et glucides. Ne sautez pas ce repas — votre corps en a besoin.`,
+      },
+      {
+        avant: isLong
+          ? `La veille : dîner riche en glucides (pâtes, riz). Le matin : petit-déjeuner connu et bien toléré, 1h30-2h avant le départ. Testez votre alimentation pré-course comme vous le ferez le jour J.`
+          : `Petit-déjeuner complet et digeste 1h30 avant. Hydratez-vous bien la veille et le matin.`,
+        pendant: isLong
+          ? `Plan de ravitaillement : eau toutes les 20 min, glucides toutes les 40-45 min (gel, banane, datte). Entraînez-vous à manger en courant — c\'est une compétence à développer avant la course.`
+          : `Eau régulièrement. Un gel ou des fruits secs si l\'effort dépasse 1h15.`,
+        apres: `Fenêtre de récupération anabolique dans les 30 min : glucides + protéines (ratio 3:1). Exemple : riz + poulet, ou smoothie protéiné + banane. Continuez à vous hydrater dans les 2h suivantes.`,
+      },
+      {
+        avant: isLong
+          ? `Chargez progressivement en glucides dans les 24h précédant la sortie. Évitez les aliments riches en fibres et les épices la veille. Le matin : pain blanc, miel, banane — simple et efficace.`
+          : `Repas familier et bien toléré 1h30-2h avant. Pas d\'expérimentation nutritionnelle avant une longue sortie.`,
+        pendant: isLong
+          ? `Objectif : 30-60g de glucides par heure d\'effort. Alternez eau et boisson isotonique. Gérez votre ravitaillement comme en course — c\'est l\'occasion de tester votre stratégie.`
+          : `Eau régulière. Gel ou encas énergétique si vous dépassez 1h15 d\'effort.`,
+        apres: `Ne tardez pas à vous réalimenter. Dans les 20-30 min : boisson de récupération ou lait + fruits. Dans l\'heure : repas complet. La récupération nutritionnelle est aussi importante que la séance elle-même.`,
+      },
+      {
+        avant: isLong
+          ? `Stratégie éprouvée : dîner pâtes la veille, petit-déjeuner glucidique le matin (porridge, pain, banane). Buvez 500 ml d\'eau 2h avant le départ et encore 250 ml 30 min avant.`
+          : `Un petit-déjeuner solide 1h30 avant suffit. Hydratez-vous bien dès le réveil.`,
+        pendant: isLong
+          ? `Prenez un gel ou équivalent avant même d\'en avoir besoin — ne gérez pas la fringale, prévenez-la. Eau toutes les 15-20 min par temps chaud, toutes les 25 min par temps frais.`
+          : `Eau selon la soif et la chaleur. Emportez un encas si vous n\'êtes pas sûr de la durée.`,
+        apres: `Récupération en 3 temps : réhydratation (eau + électrolytes), glucides rapides (fruit, jus), puis repas complet protéiné dans l\'heure. Votre corps reconstruit maintenant — nourrissez-le.`,
+      },
+    ],
+    'Fractionné': [
+      {
+        avant: 'Repas léger et digeste 2h30 à 3h avant : riz blanc, pâtes ou pain + source de protéines légère. Évitez tout aliment gras ou fibreux qui pourrait causer des crampes pendant les efforts intenses.',
+        pendant: 'Eau uniquement entre les répétitions. Évitez de boire pendant les efforts — récupérez, buvez, repartez. Une petite gorgée entre chaque répétition suffit.',
+        apres: 'Récupération protéinée prioritaire dans les 30 min : œufs, fromage blanc, yaourt grec ou shake protéiné. Les intervalles détruisent les fibres musculaires — elles ont besoin de protéines pour se reconstruire plus fortes.',
+      },
+      {
+        avant: 'La qualité des répétitions dépend en grande partie de votre état digestif. Mangez léger, mangez tôt. Un estomac lourd = des efforts ratés. Évitez les légumes crus et les légumineuses dans les 3h précédant la séance.',
+        pendant: 'L\'intensité des intervalles rend la digestion difficile. Eau fraîche entre les efforts, en petites quantités. Pas de gel, pas de boisson sucrée pendant la séance.',
+        apres: 'Fenêtre de récupération musculaire : 20-40g de protéines dans les 30 min. Ajoutez des glucides pour recharger le glycogène : un bol de riz + poulet ou un yaourt + granola.',
+      },
+      {
+        avant: 'Petit-déjeuner ou déjeuner 2-3h avant selon l\'heure de la séance. Privilégiez les glucides à index glycémique modéré (avoine, riz complet, pain) pour une énergie stable pendant toute la séance.',
+        pendant: 'Hydratation légère uniquement. Les fractionnés sollicitent intensément le système cardiovasculaire — la digestion passe en second plan. Gardez votre gourde pour les récupérations.',
+        apres: 'C\'est après les fractionnés que la nutrition de récupération est la plus importante. Protéines de qualité + glucides dans les 30 min. Dormez suffisamment : c\'est pendant le sommeil que les adaptations se produisent.',
+      },
+      {
+        avant: 'Évitez de courir à jeun sur des intervalles — votre performance en pâtirait. Un repas 2h30 avant : riz, quinoa ou pâtes + protéine légère. Si vous courez le matin, une banane et un café 45 min avant peuvent suffire.',
+        pendant: 'Eau fraîche entre les répétitions. Si vous transpirez beaucoup, une boisson légèrement salée (électrolytes) aide à maintenir les performances sur les dernières répétitions.',
+        apres: 'Double priorité : protéines pour reconstruire les muscles, glucides pour reconstituer le glycogène. Un shake de récupération ou du lait chocolaté + une banane est simple et efficace dans les 20 min suivant la séance.',
+      },
+    ],
+    'Allure spécifique': [
+      {
+        avant: 'Simulez votre routine de jour de course : même repas, même timing. 2h avant : glucides connus et bien tolérés. C\'est l\'occasion de tester et d\'affiner votre protocole pré-course.',
+        pendant: isMedium ? 'Eau régulière. Si la séance dépasse 1h, testez votre stratégie de ravitaillement de course (gels, boissons).' : 'Eau uniquement. Cette distance ne nécessite pas de ravitaillement.',
+        apres: 'Récupération glucido-protéinée dans les 30 min. Notez comment vous vous sentez : votre alimentation pré-séance a-t-elle bien fonctionné ? C\'est le moment d\'ajuster votre stratégie de course.',
+      },
+      {
+        avant: 'Traiter cette séance comme un test de course. Reproduisez votre alimentation habituelle du jour J. Hydratez-vous bien la veille et le matin.',
+        pendant: isMedium ? 'Testez en conditions réelles : la boisson et les gels que vous utiliserez en course. Votre estomac doit s\'habituer à digérer en courant à cette allure.' : 'Eau selon la soif. La durée ne justifie pas de ravitaillement glucidique.',
+        apres: 'Notez votre niveau d\'énergie en fin de séance — c\'est un bon indicateur de la qualité de votre préparation nutritionnelle. Récupérez avec protéines + glucides.',
+      },
+      {
+        avant: `Repas identique à celui que vous ferez avant la course${distance_km ? ` de ${distance_km} km` : ''}. Testez, ajustez, retenez ce qui fonctionne. Rien de nouveau le jour J.`,
+        pendant: isMedium ? 'Si vous prévoyez de vous ravitailler en course, faites-le ici aussi. Entraînez votre intestin à absorber des glucides à allure de course.' : 'Eau si nécessaire. Concentrez-vous sur la régularité de l\'allure.',
+        apres: 'Récupération standard : protéines + glucides dans les 30 min. Évaluez votre ressenti digestif — un bon signe pour votre préparation de course.',
+      },
+      {
+        avant: 'Mangez comme avant une vraie course : repas connu, bien digeste, 2h avant minimum. Évitez toute expérimentation — vous devez être concentré sur l\'allure, pas sur votre digestion.',
+        pendant: isMedium ? 'Hydratation régulière et ravitaillement selon votre plan de course. Testez vos gels à allure spécifique — c\'est maintenant qu\'on vérifie leur tolérance.' : 'Eau légère. Restez concentré sur la régularité.',
+        apres: 'Bonne récupération = prochaine séance de qualité. Glucides + protéines dans les 30 min, repas complet dans l\'heure.',
+      },
+    ],
+    'Récupération active': [
+      {
+        avant: 'Pas de contrainte particulière avant cette sortie légère. Courez avec ce que vous avez dans le ventre. Hydratez-vous bien — la récupération active commence par une bonne hydratation.',
+        pendant: 'Eau si la sortie dépasse 40 min ou s\'il fait chaud. Sinon, rien de nécessaire.',
+        apres: 'Focalisez-vous sur les protéines pour réparer les muscles sollicités lors des séances précédentes : yaourt grec, œufs, poisson ou fromage blanc. Ajoutez des anti-inflammatoires naturels : curcuma, gingembre, fruits rouges.',
+      },
+      {
+        avant: 'Séance de récupération = besoins nutritionnels réduits avant. L\'important c\'est ce que vous mangez APRÈS, pas avant.',
+        pendant: 'Légère hydratation selon la chaleur et la durée. Votre corps ne sollicite pas ses réserves glycogènes sur cette intensité.',
+        apres: 'Priorité absolue : protéines de qualité. Votre corps est en phase de reconstruction. Associez-les à des aliments anti-inflammatoires (fruits rouges, noix, huile d\'olive) pour accélérer la récupération.',
+      },
+      {
+        avant: 'Courez bien hydraté. Si vous avez couru fort la veille, buvez 500 ml d\'eau au réveil avant même de partir.',
+        pendant: 'Eau selon soif. Cette séance légère ne justifie pas de ravitaillement particulier.',
+        apres: 'C\'est le repas d\'après qui compte le plus : protéines + légumes riches en antioxydants. Évitez l\'alcool qui perturbe la récupération musculaire. Dormez suffisamment.',
+      },
+      {
+        avant: 'Aucune contrainte. La récupération active est une séance de service — le carburant nécessaire est minimal.',
+        pendant: 'Hydratation légère si besoin. Profitez de la sortie pour évaluer votre niveau de récupération général.',
+        apres: 'Magnésium, protéines et bons lipides : c\'est le trio de la récupération. Saumon, sardines ou maquereau + légumes verts + quelques noix — un repas de récupération idéal.',
+      },
+    ],
+  }
+
+  return NUTRITION[type] || null
+}
+
+function hashSession(seance) {
+  const str = `${seance.type}${seance.distance_km}${seance.duree_minutes}${seance.allure_cible}${seance.details}`
+  let h = 0
+  for (let i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) >>> 0 }
+  return h
+}
+
+function buildCoachNarrative(seance) {
+  const { type, details, distance_km, duree_minutes, allure_cible } = seance
+  const pace = allure_cible ? `à ${allure_cible}` : null
+  const dist = distance_km ? `${distance_km} km` : null
+  const duree = duree_minutes ? (duree_minutes >= 60 ? `${Math.floor(duree_minutes / 60)}h${String(duree_minutes % 60).padStart(2, '0')}` : `${duree_minutes} min`) : null
+  const det = details ? `"${details}"` : null
+  const v = hashSession(seance) % 4
+
+  const TEMPLATES = {
+    'Footing léger': [
+      `${det ? det + '. ' : ''}Restez en zone d'endurance fondamentale${dist ? ` sur ces ${dist}` : ''} — vous devez pouvoir tenir une conversation sans être essoufflé. Si vous sentez que vous forcez, ralentissez sans hésiter. Ces sorties douces construisent silencieusement votre moteur aérobie : ne les sous-estimez pas.`,
+      `${det ? det + '. ' : ''}L'objectif aujourd'hui n'est pas la performance, c'est le volume${dist ? ` : ${dist}` : ''} à allure légère${pace ? ` (${pace})` : ''}. Les jambes doivent rester légères du début à la fin. Si elles sont lourdes, c'est un signal : ralentissez, c'est la bonne décision.`,
+      `${det ? det + '. ' : ''}Footing de récupération et d'endurance${dist ? ` : ${dist}` : ''}${duree ? `, ${duree}` : ''}. Courez à une allure où vous vous sentez presque "trop lent" — c'est exactement ça. Ces kilomètres faciles représentent 80% du travail d'un coureur efficace.`,
+      `${det ? det + '. ' : ''}Séance en endurance de base${dist ? ` de ${dist}` : ''}${pace ? ` à ${pace}` : ''}. Ne cédez pas à la tentation d'aller plus vite : la valeur de cette séance est dans sa régularité et son volume, pas dans l'intensité. Profitez-en pour courir à l'instinct, sans regarder constamment votre montre.`,
+    ],
+    'Footing progressif': [
+      `${det ? det + '. ' : ''}Commencez${dist ? ` ces ${dist}` : ''} à allure très confortable, comme un footing facile. Augmentez progressivement le rythme toutes les 10-15 minutes. La règle : chaque km doit être légèrement plus rapide que le précédent${pace ? `, pour finir autour de ${pace}` : ''}. Ne cherchez pas à terminer à fond — la maîtrise est le vrai objectif.`,
+      `${det ? det + '. ' : ''}Séance de progression${dist ? ` sur ${dist}` : ''}${duree ? ` (${duree})` : ''}. Les premiers kilomètres sembleront trop lents — c'est voulu. Ce type de séance apprend à votre corps à s'adapter à l'effort croissant, une compétence clé en course. Soyez patient au départ, audacieux sur la fin.`,
+      `${det ? det + '. ' : ''}Départ tranquille, arrivée engagée${dist ? ` sur ${dist}` : ''}. La progression doit être fluide et régulière — pas de coup d'accélérateur brutal à mi-parcours. Si vous finissez${pace ? ` autour de ${pace}` : ''} en ayant encore de la marge, vous avez parfaitement exécuté la séance.`,
+      `${det ? det + '. ' : ''}Footing progressif${dist ? ` de ${dist}` : ''} : c'est une séance qui se mérite. La patience du début vous permet l'engagement de la fin. Construisez l'effort par couches, sentez votre corps se réchauffer et trouver son rythme. C'est une des séances les plus formatives du plan.`,
+    ],
+    'Sortie longue': [
+      `${det ? det + '. ' : ''}La sortie longue${dist ? ` de ${dist}` : ''} est l'âme de votre préparation. Partez délibérément lentement${pace ? ` — autour de ${pace}` : ''} — les premiers kilomètres doivent paraître trop faciles. Hydratez-vous toutes les 20 minutes même si vous n'avez pas soif. Les derniers kilomètres révèlent votre vraie forme : restez maîtrisé jusqu'au bout.`,
+      `${det ? det + '. ' : ''}${dist ? `Ces ${dist}` : 'Cette sortie'} vont solliciter votre endurance aérobie, votre résistance mentale et vos réserves énergétiques. Prenez soin de bien vous alimenter avant, et emportez de quoi vous ravitailler si la durée dépasse 1h15${duree ? ` (${duree} aujourd'hui)` : ''}. Ne cédez pas à la tentation d'aller vite en début de sortie.`,
+      `${det ? det + '. ' : ''}Sortie longue${dist ? ` de ${dist}` : ''}${duree ? `, soit environ ${duree}` : ''} sur les jambes. C'est la séance où vous simulez l'effort de la course. Courez${pace ? ` à ${pace}` : ' lentement'}, gérez votre énergie et votre hydratation. La vraie victoire c'est d'arriver au bout en contrôle, pas épuisé.`,
+      `${det ? det + '. ' : ''}Pilier de votre semaine d'entraînement${dist ? ` : ${dist}` : ''}${pace ? ` à ${pace}` : ''}. Choisissez un parcours agréable, mettez un podcast ou de la musique si ça aide, et installez-vous dans l'effort long. Ce type de séance développe des adaptations physiologiques profondes — mitochondries, capillaires, réserves glycogènes — qui ne se voient pas mais font toute la différence le jour J.`,
+    ],
+    'Fractionné': [null, null, null, null], // handled separately
+    'Allure spécifique': [
+      `${det ? det + '. ' : ''}Séance de travail à allure course${dist ? ` sur ${dist}` : ''}${pace ? ` (${pace})` : ''}. L'objectif n'est pas de tout donner, c'est d'intégrer ce rythme dans vos jambes et votre tête. Restez concentré sur la régularité — une allure stable est plus efficace que des variations. Sentez ce rythme, appropriez-vous le.`,
+      `${det ? det + '. ' : ''}Vous allez courir${pace ? ` à ${pace}` : ' à allure cible'}${dist ? ` pendant ${dist}` : ''}${duree ? ` (${duree})` : ''} : c'est l'allure que vous devrez tenir en course. L'enjeu psychologique est aussi important que physique — apprenez à trouver ce rythme confortable-inconfortable et à y rester. Ni trop vite, ni trop lent.`,
+      `${det ? det + '. ' : ''}Allure spécifique${dist ? ` sur ${dist}` : ''}${pace ? ` à ${pace}` : ''} : répétition mentale autant que physique. Chaque kilomètre couru à cette allure renforce la mémoire musculaire du rythme cible. Si vous dérivez, revenez doucement à l'allure — ne compensez pas par une accélération brutale.`,
+      `${det ? det + '. ' : ''}${dist ? `Ces ${dist}` : 'Cette séance'}${pace ? ` à ${pace}` : ''} sont un investissement direct sur votre performance le jour J. Courez avec intention et régularité${duree ? ` pendant ${duree}` : ''}. C'est en répétant ces blocs à allure spécifique que vous construisez la confiance nécessaire pour tenir le rythme en course.`,
+    ],
+    'Récupération active': [
+      `${det ? det + '. ' : ''}Séance de récupération active${dist ? ` : ${dist}` : ''}${pace ? ` à ${pace}` : ''} — ne trichez pas avec l'allure. L'objectif est de faire circuler le sang dans les muscles pour évacuer les toxines et accélérer la réparation. Si vos jambes sont lourdes ou douloureuses, c'est normal : c'est justement pour ça que cette séance existe.`,
+      `${det ? det + '. ' : ''}Après les efforts de cette semaine, votre corps a besoin de cette sortie légère${dist ? ` de ${dist}` : ''}. Courez sans montre si possible, à l'allure qui vous semble "ridiculement lente". Cette séance est aussi importante dans votre plan que les séances intenses — ne la négligez pas ou ne la sautez pas.`,
+      `${det ? det + '. ' : ''}Récupération active${dist ? ` sur ${dist}` : ''}${duree ? ` (${duree})` : ''}. Gardez une foulée légère et décontractée${pace ? `, allure cible ${pace}` : ''}. Si vous avez couru fort ces derniers jours, vous sentirez peut-être une légèreté qui revient au fil des kilomètres — c'est le signe que la séance fait son travail.`,
+      `${det ? det + '. ' : ''}Sortie douce de régénération${dist ? ` : ${dist}` : ''}. L'erreur classique est de courir trop vite "parce que ça va bien" — résistez à cette envie. La valeur est dans l'intensité basse. Profitez de cette sortie pour vous reconnecter à la course de façon légère, sans pression de performance.`,
+    ],
+  }
+
+  const variants = TEMPLATES[type]
+  if (!variants) return details || null
+  if (type === 'Fractionné') return null
+  return variants[v] || details || null
+}
+
+function parseIntervalBlocks(text) {
+  if (!text) return []
+  return text.split(/[,;]/).map(s => s.trim()).filter(Boolean).map(seg => {
+    const type = INTERVAL_BLOCK_TYPES.find(t => t.match(seg))
+    return type ? { ...type, text: seg } : { key: 'default', text: seg, label: '', color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' }
+  })
+}
+
+function buildIntervalNarrative(blocks) {
+  const efforts = blocks.filter(b => b.key === 'effort')
+  const recups = blocks.filter(b => b.key === 'récup')
+  const warmup = blocks.find(b => b.key === 'échauffement')
+  const cooldown = blocks.find(b => b.key === 'calme')
+
+  const parts = []
+  if (warmup) parts.push(`Commencez par ${warmup.text.toLowerCase().replace(/^échauffement\s*/i, 'un échauffement de ')}`)
+  if (efforts.length > 0) {
+    const effortText = efforts.map(e => e.text).join(', ')
+    parts.push(`enchaînez ${effortText}`)
+  }
+  if (recups.length > 0) {
+    parts.push(`avec ${recups.map(r => r.text.toLowerCase()).join(', ')} entre chaque effort`)
+  }
+  if (cooldown) parts.push(`terminez par ${cooldown.text.toLowerCase().replace(/^retour au calme\s*/i, 'un retour au calme de ')}`)
+
+  const base = parts.length > 0
+    ? parts.join(', ') + '.'
+    : blocks.map(b => b.text).join(', ') + '.'
+
+  return base.charAt(0).toUpperCase() + base.slice(1) + ' Respectez bien les temps de récupération pour maintenir la qualité de chaque répétition.'
+}
+
+function NutritionSection({ seance, hash }) {
+  const variants = buildNutritionAdvice(seance)
+  if (!variants) return null
+  const advice = variants[hash % variants.length]
+  const defaultOpen = ['Sortie longue', 'Fractionné'].includes(seance.type)
+  const [open, setOpen] = useState(defaultOpen)
+
+  const blocks = [
+    { key: 'avant', label: 'Avant', icon: '🕐', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+    { key: 'pendant', label: 'Pendant', icon: '⚡', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+    { key: 'apres', label: 'Après', icon: '✓', color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' },
+  ]
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: '#f7f7f8', border: '1px solid #e8e8e8', borderRadius: open ? '12px 12px 0 0' : '12px', padding: '0.65rem 1rem', cursor: 'pointer', transition: 'all 0.2s' }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            <Apple size={12} strokeWidth={2} />Nutrition & hydratation
+          </span>
+        <span style={{ fontSize: '0.65rem', color: '#b0b3c1', transition: 'transform 0.2s', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ background: '#fafafa', border: '1px solid #e8e8e8', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {blocks.map(b => (
+            <div key={b.key} style={{ borderLeft: `3px solid ${b.border}`, paddingLeft: '0.75rem' }}>
+              <span style={{ fontSize: '0.58rem', fontWeight: '700', color: b.color, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.2rem' }}>{b.label}</span>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#464754', lineHeight: 1.5 }}>{advice[b.key]}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CollapsibleInstructions({ text, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: '#f7f7f8', border: '1px solid #e8e8e8', borderRadius: open ? '12px 12px 0 0' : '12px', padding: '0.65rem 1rem', cursor: 'pointer', transition: 'all 0.2s' }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            <BookOpen size={12} strokeWidth={2} />Instructions
+          </span>
+        <span style={{ fontSize: '0.65rem', color: '#b0b3c1', transition: 'transform 0.2s', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ background: '#fafafa', border: '1px solid #e8e8e8', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '0.75rem 1rem' }}>
+          <p style={{ fontSize: '0.82rem', color: '#464754', lineHeight: 1.55, margin: 0 }}>{text}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NoteField({ note, fatigue, onSave }) {
   const [open, setOpen] = useState(false)
   const [localFatigue, setLocalFatigue] = useState(fatigue || null)
@@ -40,15 +370,17 @@ function NoteField({ note, fatigue, onSave }) {
 
   return (
     <div style={{ marginBottom: '1.25rem' }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.72rem', fontWeight: '500', color: hasContent ? '#02A257' : '#b0b3c1' }}
-      >
-        <span style={{ fontSize: '0.65rem' }}>{open ? '▾' : '▸'}</span>
-        {hasContent ? 'Votre ressenti' : 'Ajouter votre ressenti'}
-      </button>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: open ? '0.75rem' : 0 }}>
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem 0', fontSize: '0.78rem', fontWeight: '500', color: hasContent ? '#02A257' : '#9ea0ae' }}
+        >
+          {open ? <span style={{ fontSize: '0.65rem' }}>▾</span> : <Plus size={13} strokeWidth={2.5} />}
+          {hasContent ? 'Votre ressenti' : 'Ajouter votre ressenti'}
+        </button>
+      </div>
       {open && (
-        <div style={{ marginTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
             {FATIGUE_LEVELS.map(f => (
               <button
@@ -316,8 +648,9 @@ export default function PlanDetailClient({ plan }) {
             {plan.race_name && <span style={{ fontSize: '0.75rem', color: '#b0b3c1', flexShrink: 0 }}>{plan.distance}</span>}
           </div>
           {raceDate && (
-            <span style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', fontSize: '0.75rem', color: '#9ea0ae', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
-              {raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            <span style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#9ea0ae', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+              <Flag size={12} strokeWidth={2} />
+              Course prévue le {raceDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
           )}
           {weeksLeft !== null && weeksLeft > 0 && (
@@ -434,12 +767,46 @@ export default function PlanDetailClient({ plan }) {
                       </div>
                     ))}
                   </div>
-                  {s.details && (
-                    <div style={{ background: '#f0faf5', border: '1px solid #c5e6d5', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem' }}>
-                      <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#02A257', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>Instructions</div>
-                      <p style={{ fontSize: '0.82rem', color: '#464754', lineHeight: 1.55, margin: 0 }}>{s.details}</p>
-                    </div>
-                  )}
+                  {(() => {
+                    const coachText = buildCoachNarrative(s)
+                    if (s.type === 'Fractionné') {
+                      const blocks = parseIntervalBlocks(s.details)
+                      const isOpen = !done && !strava
+                      return (
+                        <div style={{ marginBottom: '1.25rem' }}>
+                          <CollapsibleInstructions text={buildIntervalNarrative(blocks)} defaultOpen={isOpen} />
+                          {(!done && !strava) && (
+                            <>
+                              <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.65rem' }}>Programme</div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                {blocks.map((b, idx) => (
+                                  <div key={idx} style={{ display: 'flex', alignItems: 'stretch', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '16px', flexShrink: 0 }}>
+                                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: b.color, flexShrink: 0, marginTop: '0.65rem', border: `2px solid ${b.border}` }} />
+                                      {idx < blocks.length - 1 && (
+                                        <div style={{ width: '2px', flex: 1, background: '#e8e8e8', minHeight: '12px', marginTop: '2px' }} />
+                                      )}
+                                    </div>
+                                    <div style={{ flex: 1, padding: '0.5rem 0.75rem', marginBottom: idx < blocks.length - 1 ? '0.35rem' : 0, borderRadius: '10px', background: b.bg, border: `1px solid ${b.border}` }}>
+                                      {b.label && (
+                                        <div style={{ fontSize: '0.58rem', fontWeight: '700', color: b.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.2rem' }}>{b.label}</div>
+                                      )}
+                                      <div style={{ fontSize: '0.82rem', color: '#464754', lineHeight: 1.45 }}>{b.text}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                    }
+                    if (!coachText) return null
+                    return <CollapsibleInstructions text={coachText} defaultOpen={!done && !strava} />
+
+                  })()}
+                  {/* Nutrition */}
+                  <NutritionSection seance={s} hash={hashSession(s)} />
                   {/* Notes */}
                   <NoteField
                     note={typeof s.note === 'string' && s.note !== '[object Object]' ? s.note : ''}
