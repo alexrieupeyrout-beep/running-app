@@ -1,0 +1,8 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond vert -->
+  <rect width="1024" height="1024" rx="230" fill="#02A257"/>
+  <!-- Carré blanc arrondi centré -->
+  <rect x="172" y="172" width="680" height="680" rx="140" fill="white"/>
+  <!-- Piste ovale verte -->
+  <rect x="262" y="362" width="500" height="300" rx="150" fill="none" stroke="#02A257" stroke-width="72"/>
+</svg>

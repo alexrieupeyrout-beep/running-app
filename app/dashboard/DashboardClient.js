@@ -723,6 +723,11 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
 
             {/* Logo */}
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0, textDecoration: 'none' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', border: '1px solid #c5e6d5', flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 52 52" fill="none">
+                  <rect x="4" y="14" width="44" height="24" rx="12" stroke="#02A257" strokeWidth="5" fill="none"/>
+                </svg>
+              </div>
               <span style={{ color: '#02A257', fontWeight: '900', fontSize: '1.35rem', letterSpacing: '-0.01em' }}>VITE</span>
             </Link>
 
