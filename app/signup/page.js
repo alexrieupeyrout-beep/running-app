@@ -85,29 +85,6 @@ export default function Signup() {
             </p>
           </div>
 
-          {/* CTA sans compte */}
-          <Link
-            href="/onboarding"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-              padding: '0.9rem', borderRadius: '14px', background: '#02A257',
-              color: 'white', fontWeight: '700', fontSize: '0.9rem',
-              textDecoration: 'none', transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = '#019048'}
-            onMouseLeave={e => e.currentTarget.style.background = '#02A257'}
-          >
-            Continuer sans compte
-            <ArrowRight size={15} />
-          </Link>
-
-          {/* Séparateur */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ flex: 1, height: '1px', background: '#e8e8e8' }} />
-            <span style={{ fontSize: '0.72rem', color: '#c0c2cc', fontWeight: '500' }}>ou</span>
-            <div style={{ flex: 1, height: '1px', background: '#e8e8e8' }} />
-          </div>
-
           {/* Formulaire magic link */}
           {sent ? (
             <div style={{
@@ -181,23 +158,34 @@ export default function Signup() {
             </form>
           )}
 
-        </div>
-
-        {/* Accès rapide PIN — discret */}
-        <form onSubmit={handlePin} style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-          <input
-            type="password"
-            placeholder="••••"
-            value={pin}
-            onChange={e => setPin(e.target.value)}
+          {/* Lien sans compte */}
+          <button
+            onClick={() => { localStorage.setItem('guest', '1'); router.push('/dashboard') }}
             style={{
-              width: '80px', padding: '0.4rem 0.6rem', borderRadius: '8px', textAlign: 'center',
-              border: '1px solid #e8e8e8', fontSize: '0.8rem', color: '#9ea0ae',
-              background: 'transparent', outline: 'none', letterSpacing: '0.2em',
+              textAlign: 'center', fontSize: '0.8rem', color: '#c0c2cc',
+              background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500',
             }}
-          />
-          {pinError && <span style={{ fontSize: '0.7rem', color: '#e53e3e' }}>{pinError}</span>}
-        </form>
+          >
+            Continuer sans compte
+          </button>
+
+          {/* Accès rapide PIN — discret */}
+          <form onSubmit={handlePin} style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+            <input
+              type="password"
+              placeholder="••••"
+              value={pin}
+              onChange={e => setPin(e.target.value)}
+              style={{
+                width: '80px', padding: '0.4rem 0.6rem', borderRadius: '8px', textAlign: 'center',
+                border: '1px solid #e8e8e8', fontSize: '0.8rem', color: '#9ea0ae',
+                background: 'transparent', outline: 'none', letterSpacing: '0.2em',
+              }}
+            />
+            {pinError && <span style={{ fontSize: '0.7rem', color: '#e53e3e' }}>{pinError}</span>}
+          </form>
+
+        </div>
 
       </div>
     </div>

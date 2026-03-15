@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Settings, XCircle, PauseCircle, Bike, Dumbbell, Footprints, Waves, Zap, Mountain, Activity, Leaf } from 'lucide-react'
+import { Settings, XCircle, PauseCircle, Bike, Dumbbell, Footprints, Waves, Zap, Mountain, Activity, Leaf, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 const INTENSITE_COLORS = {
@@ -74,6 +74,16 @@ function SessionShape({ type, size = 28 }) {
       <rect x="4" y="4" width="20" height="20" rx="5" stroke={color} strokeWidth={sw} />
     </svg>
   )
+}
+
+function AccountEmail() {
+  const [email, setEmail] = useState('')
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) setEmail(session.user.email)
+    })
+  }, [])
+  return <div style={{ fontSize: '0.85rem', color: '#282830', fontWeight: '500' }}>{email || '—'}</div>
 }
 
 function ActivityIcon({ type, size = 18 }) {
@@ -558,8 +568,14 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [advancedEdit, setAdvancedEdit] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
+  const [isGuest, setIsGuest] = useState(false)
+  const [guestNudge, setGuestNudge] = useState(false)
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
+
   useEffect(() => {
     if (localStorage.getItem('pin_authed') === '1') return
+    if (localStorage.getItem('guest') === '1') { setIsGuest(true); return }
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) router.replace('/signup')
     })
@@ -638,6 +654,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const totalDenivele = filtered.reduce((sum, c) => sum + (c.denivele_positif || 0), 0).toFixed(0)
 
   const handleDelete = async (id) => {
+    if (isGuest) { setGuestNudge(true); setConfirmDelete(null); return }
     await fetch(`/api/courses/${id}`, { method: 'DELETE' })
     setConfirmDelete(null)
     router.refresh()
@@ -1028,13 +1045,43 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                         </div>
                       </div>
 
-                      {/* Compte — bientôt */}
+                      {/* Compte */}
                       <div>
                         <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#9ea0ae', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Compte</div>
-                        <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', border: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 0.5 }}>
-                          <div style={{ fontSize: '0.85rem', color: '#9ea0ae' }}>Email / mot de passe</div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: '600', color: '#b0b3c1', background: '#f0f0f0', padding: '0.15rem 0.5rem', borderRadius: '6px' }}>Bientôt</span>
-                        </div>
+                        {isGuest ? (
+                          <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', border: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ fontSize: '0.82rem', color: '#9ea0ae' }}>Mode visiteur</div>
+                            <button
+                              onClick={() => { localStorage.removeItem('guest'); router.push('/signup') }}
+                              style={{ fontSize: '0.75rem', fontWeight: '700', color: '#02A257', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                            >
+                              Créer un compte →
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', border: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div>
+                                <div style={{ fontSize: '0.7rem', color: '#b0b3c1', marginBottom: '0.15rem' }}>Connecté avec</div>
+                                <AccountEmail />
+                              </div>
+                              <button
+                                onClick={() => setConfirmLogout(true)}
+                                style={{ fontSize: '0.75rem', fontWeight: '600', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                              >
+                                Déconnexion
+                              </button>
+                            </div>
+
+                            {/* Suppression compte — discret */}
+                            <button
+                              onClick={() => setConfirmDeleteAccount(true)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.72rem', color: '#ef4444', padding: '0.25rem 0', width: '100%', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}
+                            >
+                              <Trash2 size={12} /> Supprimer mon compte
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                     </div>
@@ -1596,6 +1643,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
         ].filter(Boolean)
 
         const saveNote = async () => {
+          if (isGuest) { setGuestNudge(true); return }
           await fetch(`/api/courses/${c.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -1624,6 +1672,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                   <button
                     onClick={async () => {
                       const newVal = !activityFavorite
+                      if (isGuest) { setGuestNudge(true); return }
                       setActivityFavorite(newVal)
                       await fetch(`/api/courses/${c.id}`, {
                         method: 'PATCH',
@@ -1780,6 +1829,95 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
           </div>
         )
       })()}
+
+      {/* ── Logout confirm modal ── */}
+      {confirmLogout && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '320px', width: '90%', textAlign: 'center', border: '1px solid #e8e8e8' }}>
+            <p style={{ fontWeight: '700', fontSize: '1rem', color: '#282830', marginBottom: '0.4rem' }}>Se déconnecter ?</p>
+            <p style={{ fontSize: '0.82rem', color: '#9ea0ae', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+              Tu devras te reconnecter via un lien envoyé par email.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button onClick={() => setConfirmLogout(false)} style={{ padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #e8e8e8', cursor: 'pointer', background: 'white', fontWeight: '500', color: '#9ea0ae', fontSize: '0.85rem' }}>Annuler</button>
+              <button onClick={async () => { await supabase.auth.signOut(); localStorage.removeItem('pin_authed'); router.push('/signup') }} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: '700', fontSize: '0.85rem' }}>Se déconnecter</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete account confirm modal ── */}
+      {confirmDeleteAccount && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', maxWidth: '340px', width: '90%', border: '1px solid #fee2e2', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Coach photo */}
+            <div style={{ position: 'relative', height: '160px', overflow: 'hidden' }}>
+              <img src="/coach.png" alt="coach" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.6))' }} />
+              <div style={{ position: 'absolute', bottom: '0.75rem', left: '1rem', right: '1rem' }}>
+                <p style={{ color: 'white', fontWeight: '800', fontSize: '0.95rem', margin: 0, lineHeight: 1.3, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                  Tu veux vraiment abandonner ? 😤
+                </p>
+              </div>
+            </div>
+
+            <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1 }}>
+              <p style={{ fontSize: '0.85rem', color: '#282830', fontWeight: '600', marginBottom: '0.4rem' }}>
+                C'est comme au mur du 30ème km — on lâche rien.
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#9ea0ae', marginBottom: '1rem', lineHeight: '1.5' }}>
+                Si tu supprimes ton compte, tout disparaît : activités, plans, notes, favoris. Définitivement.
+              </p>
+
+              {/* Ce qui sera supprimé */}
+              <div style={{ background: '#fff5f5', borderRadius: '10px', padding: '0.75rem', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {['Ton compte & identifiants', 'Ton historique d\'activités', 'Tes plans d\'entraînement', 'Tes notes, RPE et favoris'].map(item => (
+                  <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#fca5a5', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.77rem', color: '#9ea0ae' }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', position: 'sticky', bottom: 0, background: 'white', paddingTop: '0.5rem' }}>
+                <button onClick={() => setConfirmDeleteAccount(false)} style={{ flex: 1, padding: '0.7rem', borderRadius: '10px', border: '1px solid #c5e6d5', cursor: 'pointer', background: '#f0faf5', fontWeight: '700', color: '#02A257', fontSize: '0.85rem' }}>Je reste 💪</button>
+                <button onClick={async () => {
+                  const { data: { session } } = await supabase.auth.getSession()
+                  if (session?.user?.id) {
+                    await fetch('/api/auth/delete-account', {
+                      method: 'DELETE',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ userId: session.user.id }),
+                    })
+                  }
+                  await supabase.auth.signOut()
+                  localStorage.clear()
+                  router.push('/signup')
+                }} style={{ flex: 1, padding: '0.7rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: '600', fontSize: '0.82rem' }}>Supprimer quand même</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ── Guest nudge modal ── */}
+      {guestNudge && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(40,40,48,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', maxWidth: '320px', width: '90%', textAlign: 'center', border: '1px solid #c5e6d5' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>🔒</div>
+            <p style={{ fontWeight: '700', fontSize: '1rem', color: '#282830', marginBottom: '0.4rem' }}>Crée un compte pour ça</p>
+            <p style={{ fontSize: '0.82rem', color: '#9ea0ae', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+              Sauvegarde tes favoris, notes et RPE en créant un compte gratuit.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button onClick={() => setGuestNudge(false)} style={{ padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid #e8e8e8', cursor: 'pointer', background: 'white', fontWeight: '500', color: '#9ea0ae', fontSize: '0.85rem' }}>Plus tard</button>
+              <button onClick={() => { localStorage.removeItem('guest'); router.push('/signup') }} style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#02A257', color: 'white', fontWeight: '700', fontSize: '0.85rem' }}>Créer un compte</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Delete confirm modal ── */}
       {confirmDelete && (
