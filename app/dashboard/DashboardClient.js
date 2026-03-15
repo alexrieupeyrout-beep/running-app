@@ -599,6 +599,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
   const [activityRPE, setActivityRPE] = useState(null)
   const [activityNote, setActivityNote] = useState('')
   const [activityNoteSaved, setActivityNoteSaved] = useState(false)
+  const [activityFavorite, setActivityFavorite] = useState(false)
   const [activityPolyline, setActivityPolyline] = useState(null)
   const [activityPolylineLoading, setActivityPolylineLoading] = useState(false)
 
@@ -1322,6 +1323,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                               setActivityRPE(c.rpe || null)
                               setActivityNote(c.note || '')
                               setActivityNoteSaved(false)
+                              setActivityFavorite(c.is_favorite || false)
                               setActivityPolyline(null)
                               if (c.strava_id) {
                                 setActivityPolylineLoading(true)
@@ -1335,8 +1337,15 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                                 <ActivityIcon type={c.type_activite} size={20} />
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#282830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {c.nom || typeLabel}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                  <span style={{ fontWeight: '600', fontSize: '0.85rem', color: '#282830', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {c.nom || typeLabel}
+                                  </span>
+                                  {c.is_favorite && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                  )}
                                 </div>
                                 <div style={{ fontSize: '0.7rem', color: '#9ea0ae', marginTop: '0.1rem' }}>{dateStr}</div>
                               </div>
@@ -1580,9 +1589,27 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                     <div style={{ fontSize: '0.72rem', color: '#9ea0ae', marginTop: '0.1rem', textTransform: 'capitalize' }}>{dateStr}</div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedActivity(null)} style={{ border: 'none', background: '#f5f5f5', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <XCircle size={16} color="#c0c2cc" />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button
+                    onClick={async () => {
+                      const newVal = !activityFavorite
+                      setActivityFavorite(newVal)
+                      await fetch(`/api/courses/${c.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_favorite: newVal }),
+                      })
+                    }}
+                    title={activityFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    style={{ border: 'none', background: activityFavorite ? '#fff8e6' : '#f5f5f5', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill={activityFavorite ? '#f59e0b' : 'none'} stroke={activityFavorite ? '#f59e0b' : '#c0c2cc'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button onClick={() => setSelectedActivity(null)} style={{ border: 'none', background: '#f5f5f5', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <XCircle size={16} color="#c0c2cc" />
+                  </button>
+                </div>
               </div>
 
               <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

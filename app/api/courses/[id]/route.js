@@ -17,6 +17,7 @@ export async function PATCH(request, { params }) {
   const update = {}
   if (body.rpe !== undefined) update.rpe = body.rpe
   if (body.note !== undefined) update.note = body.note
+  if (body.is_favorite !== undefined) update.is_favorite = body.is_favorite
   await supabase.from('courses').update(update).eq('id', id)
   return Response.json({ success: true })
 }
