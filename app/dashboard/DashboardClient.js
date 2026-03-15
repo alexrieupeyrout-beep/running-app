@@ -175,7 +175,6 @@ function PlanSection({ plan, onAbandon }) {
           {/* Ligne 1 — Titre + gear */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: '0.6rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.2rem' }}>Votre plan</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '1rem', fontWeight: '800', ...T.primary }}>
                   {plan.race_name ? `${plan.distance} — ${plan.race_name}` : plan.distance}
@@ -872,38 +871,81 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
         {activeTab === 'plan' && (
           plans.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {plans.length > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {plans.map((p, i) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setSelectedPlanIdx(i)}
-                      style={{
-                        padding: '0.4rem 0.9rem', borderRadius: '10px', border: `1.5px solid ${selectedPlanIdx === i ? '#02A257' : '#c5e6d5'}`,
-                        background: selectedPlanIdx === i ? '#02A257' : 'white', color: selectedPlanIdx === i ? 'white' : '#656779',
-                        fontWeight: selectedPlanIdx === i ? '600' : '400', fontSize: '0.82rem', cursor: 'pointer',
-                      }}
-                    >
-                      {p.distance}{p.race_name ? ` · ${p.race_name}` : ''} {i === 0 ? '(actif)' : ''}
-                    </button>
-                  ))}
-                  <div style={{ flex: 1 }} />
-                  <Link href="/onboarding" style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', textDecoration: 'none' }}>
-                    + Nouveau plan
-                  </Link>
-                </div>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {plans.length > 1 && plans.map((p, i) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPlanIdx(i)}
+                    style={{
+                      padding: '0.4rem 0.9rem', borderRadius: '10px', border: `1.5px solid ${selectedPlanIdx === i ? '#02A257' : '#c5e6d5'}`,
+                      background: selectedPlanIdx === i ? '#02A257' : 'white', color: selectedPlanIdx === i ? 'white' : '#656779',
+                      fontWeight: selectedPlanIdx === i ? '600' : '400', fontSize: '0.82rem', cursor: 'pointer',
+                    }}
+                  >
+                    {p.distance}{p.race_name ? ` · ${p.race_name}` : ''} {i === 0 ? '(actif)' : ''}
+                  </button>
+                ))}
+                <div style={{ flex: 1 }} />
+                <Link href="/onboarding" style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', textDecoration: 'none' }}>
+                  + Nouveau plan
+                </Link>
+              </div>
+              <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {plans.length > 1 ? 'Vos plans actifs' : 'Votre plan'}
+              </div>
               <PlanSection plan={plans[selectedPlanIdx]} onAbandon={setConfirmAbandon} />
+              <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                {[
+                  { distance: '5K',       semaines: '6 semaines',  volume: '25 km/sem' },
+                  { distance: '10K',      semaines: '8 semaines',  volume: '35 km/sem' },
+                  { distance: 'Semi',     semaines: '12 semaines', volume: '50 km/sem' },
+                  { distance: 'Marathon', semaines: '16 semaines', volume: '65 km/sem' },
+                ].map(p => (
+                  <Link
+                    key={p.distance}
+                    href={`/onboarding?distance=${p.distance}`}
+                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem', opacity: 0.75 }}
+                  >
+                    <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.distance === 'Semi' ? 'Semi-Marathon' : p.distance}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.semaines}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.volume}</div>
+                    <div style={{ marginTop: '0.25rem', fontSize: '0.78rem', fontWeight: '600', color: '#02A257' }}>Créer ce plan →</div>
+                  </Link>
+                ))}
+              </div>
             </div>
           ) : (
-            <div style={{ ...T.card, padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <div>
-                <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
-                <div style={{ fontSize: '0.85rem', ...T.muted }}>Crée ton plan d'entraînement personnalisé pour commencer.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ ...T.card, padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontWeight: '600', ...T.primary, marginBottom: '0.25rem' }}>Aucun plan actif</div>
+                  <div style={{ fontSize: '0.85rem', ...T.muted }}>Crée ton plan d'entraînement personnalisé pour commencer.</div>
+                </div>
+                <Link href="/onboarding" style={{ background: '#02A257', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
+                  Créer mon plan →
+                </Link>
               </div>
-              <Link href="/onboarding" style={{ background: '#02A257', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' }}>
-                Créer mon plan →
-              </Link>
+              <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                {[
+                  { distance: '5K',      semaines: '6 semaines',  volume: '25 km/sem' },
+                  { distance: '10K',     semaines: '8 semaines',  volume: '35 km/sem' },
+                  { distance: 'Semi',    semaines: '12 semaines', volume: '50 km/sem' },
+                  { distance: 'Marathon',semaines: '16 semaines', volume: '65 km/sem' },
+                ].map(p => (
+                  <Link
+                    key={p.distance}
+                    href={`/onboarding?distance=${p.distance}`}
+                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem', opacity: 0.75 }}
+                  >
+                    <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.distance === 'Semi' ? 'Semi-Marathon' : p.distance === 'Marathon' ? 'Marathon' : p.distance}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.semaines}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ea0ae' }}>{p.volume}</div>
+                    <div style={{ marginTop: '0.25rem', fontSize: '0.78rem', fontWeight: '600', color: '#02A257' }}>Créer ce plan →</div>
+                  </Link>
+                ))}
+              </div>
             </div>
           )
         )}

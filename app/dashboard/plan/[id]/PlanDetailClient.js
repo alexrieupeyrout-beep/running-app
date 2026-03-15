@@ -19,6 +19,64 @@ const SESSION_SHAPE_COLORS = {
   'Récupération active': '#7c3aed',
 }
 
+const FATIGUE_LEVELS = [
+  { value: 1, label: 'Épuisé',   color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+  { value: 2, label: 'Fatigué',  color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+  { value: 3, label: 'Neutre',   color: '#6b7280', bg: '#f3f4f6', border: '#e5e7eb' },
+  { value: 4, label: 'En forme', color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' },
+  { value: 5, label: 'En feu',   color: '#02A257', bg: '#f0faf5', border: '#c5e6d5' },
+]
+
+function NoteField({ note, fatigue, onSave }) {
+  const [open, setOpen] = useState(false)
+  const [localFatigue, setLocalFatigue] = useState(fatigue || null)
+  const hasContent = note || fatigue
+
+  const handleFatigue = async (val) => {
+    const newVal = localFatigue === val ? null : val
+    setLocalFatigue(newVal)
+    onSave({ note, fatigue: newVal })
+  }
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.72rem', fontWeight: '500', color: hasContent ? '#02A257' : '#b0b3c1' }}
+      >
+        <span style={{ fontSize: '0.65rem' }}>{open ? '▾' : '▸'}</span>
+        {hasContent ? 'Votre ressenti' : 'Ajouter votre ressenti'}
+      </button>
+      {open && (
+        <div style={{ marginTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            {FATIGUE_LEVELS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => handleFatigue(f.value)}
+                style={{
+                  flex: 1, padding: '0.35rem 0', borderRadius: '8px', border: `1.5px solid ${localFatigue === f.value ? f.border : '#e8e8e8'}`,
+                  background: localFatigue === f.value ? f.bg : 'white',
+                  color: localFatigue === f.value ? f.color : '#b0b3c1',
+                  fontSize: '0.65rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s',
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <textarea
+            defaultValue={typeof note === 'string' ? note : ''}
+            placeholder="Comment s'est passée cette séance ? Tes jambes, ta tête, la météo…"
+            onBlur={(e) => onSave({ note: e.target.value, fatigue: localFatigue })}
+            style={{ width: '100%', minHeight: '68px', padding: '0.6rem 0.8rem', borderRadius: '10px', border: '1.5px solid #e8e8e8', fontSize: '0.82rem', color: '#464754', lineHeight: 1.5, resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SessionShape({ type, size = 28 }) {
   const color = SESSION_SHAPE_COLORS[type] || '#9ea0ae'
   const s = size
@@ -361,6 +419,8 @@ export default function PlanDetailClient({ plan }) {
                   </div>
                 </div>
                 <div style={{ padding: '1.25rem 1.5rem' }}>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '700', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Séance {sessionIndex + 1}</div>
+                  {s.description && <p style={{ fontSize: '0.9rem', color: '#464754', lineHeight: 1.55, marginBottom: '1rem' }}>{s.description}</p>}
                   {/* Stats prévues */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
                     {[
@@ -374,21 +434,38 @@ export default function PlanDetailClient({ plan }) {
                       </div>
                     ))}
                   </div>
-                  {s.description && <p style={{ fontSize: '0.9rem', color: '#464754', lineHeight: 1.55, marginBottom: '0.75rem' }}>{s.description}</p>}
                   {s.details && (
                     <div style={{ background: '#f0faf5', border: '1px solid #c5e6d5', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem' }}>
                       <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#02A257', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>Instructions</div>
                       <p style={{ fontSize: '0.82rem', color: '#464754', lineHeight: 1.55, margin: 0 }}>{s.details}</p>
                     </div>
                   )}
+                  {/* Notes */}
+                  <NoteField
+                    note={typeof s.note === 'string' && s.note !== '[object Object]' ? s.note : ''}
+                    fatigue={s.fatigue || null}
+                    onSave={async ({ note, fatigue }) => {
+                      const semaines = [...localSemaines]
+                      semaines[weekIndex].seances[sessionIndex].note = note
+                      semaines[weekIndex].seances[sessionIndex].fatigue = fatigue
+                      setLocalSemaines(semaines)
+                      await fetch('/api/plan/session', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ plan_id: plan.id, week_index: weekIndex, session_index: sessionIndex, note, fatigue }),
+                      })
+                    }}
+                  />
                   {/* Mark as done */}
                   {!strava ? (
-                    <button
-                      onClick={() => toggleCompleted(weekIndex, sessionIndex)}
-                      style={{ width: '100%', padding: '0.85rem', borderRadius: '14px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.15s', background: done ? '#f0fdf4' : '#02A257', color: done ? '#16a34a' : 'white', boxShadow: done ? 'none' : '0 2px 8px rgba(2,162,87,0.3)' }}
-                    >
-                      {done ? <><CheckCircle2 size={17} /> Séance réalisée — annuler</> : <><Circle size={17} /> Marquer comme réalisée</>}
-                    </button>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => toggleCompleted(weekIndex, sessionIndex)}
+                        style={{ padding: '0.5rem 1.25rem', borderRadius: '99px', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s', background: done ? '#f0fdf4' : '#02A257', color: done ? '#16a34a' : 'white', border: `1.5px solid ${done ? '#bbf7d0' : '#02A257'}` }}
+                      >
+                        {done ? 'Réalisée — annuler' : 'Marquer comme réalisée'}
+                      </button>
+                    </div>
                   ) : null}
                   {/* Activity block */}
                   {strava && (

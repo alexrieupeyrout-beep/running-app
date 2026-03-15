@@ -7,7 +7,7 @@ const supabase = createClient(
 
 export async function PATCH(request) {
   try {
-    const { plan_id, week_index, session_index, completed, manual_activity } = await request.json()
+    const { plan_id, week_index, session_index, completed, manual_activity, note, fatigue } = await request.json()
     if (!plan_id) return Response.json({ error: 'plan_id requis' }, { status: 400 })
 
     const { data: plan, error: fetchError } = await supabase
@@ -26,6 +26,12 @@ export async function PATCH(request) {
     semaines[week_index].seances[session_index].completed = completed
     if (manual_activity !== undefined) {
       semaines[week_index].seances[session_index].manual_activity = manual_activity
+    }
+    if (note !== undefined) {
+      semaines[week_index].seances[session_index].note = note
+    }
+    if (fatigue !== undefined) {
+      semaines[week_index].seances[session_index].fatigue = fatigue
     }
 
     const { error: updateError } = await supabase
