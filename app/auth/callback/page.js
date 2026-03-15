@@ -10,11 +10,23 @@ function AuthCallbackInner() {
   useEffect(() => {
     const code = searchParams.get('code')
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(() => {
-        router.replace('/dashboard')
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          console.error('exchangeCodeForSession error:', error.message)
+          router.replace('/signup?error=' + encodeURIComponent(error.message))
+        } else {
+          router.replace('/dashboard')
+        }
       })
     } else {
-      router.replace('/signup')
+      // Supabase implicit flow : session dans le hash
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          router.replace('/dashboard')
+        } else {
+          router.replace('/signup')
+        }
+      })
     }
   }, [])
 

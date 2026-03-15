@@ -2,15 +2,18 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ArrowRight, Mail, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export default function Signup() {
+function SignupInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(searchParams.get('error') || '')
   const [pin, setPin] = useState('')
   const [pinError, setPinError] = useState('')
 
@@ -206,5 +209,13 @@ export default function Signup() {
 
       </div>
     </div>
+  )
+}
+
+export default function Signup() {
+  return (
+    <Suspense>
+      <SignupInner />
+    </Suspense>
   )
 }
