@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -173,7 +173,7 @@ function computeConfidence(data, planWeeks) {
 
 // ── Main component ────────────────────────────
 
-export default function Onboarding() {
+function OnboardingInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
@@ -1728,5 +1728,13 @@ function ConfidenceIndicator({ confidence }) {
       )}
 
     </div>
+  )
+}
+
+export default function Onboarding() {
+  return (
+    <Suspense>
+      <OnboardingInner />
+    </Suspense>
   )
 }
