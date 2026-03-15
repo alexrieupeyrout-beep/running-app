@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { AlertTriangle, Check, TrendingUp, AlertCircle, X, Sparkles, Plus, Trash2, Pencil, Flag, Zap, Clock } from 'lucide-react'
@@ -175,6 +175,7 @@ function computeConfidence(data, planWeeks) {
 
 export default function Onboarding() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [generateError, setGenerateError] = useState(null)
@@ -195,9 +196,11 @@ export default function Onboarding() {
     fetch('/api/strava/status').then(r => r.json()).then(d => setStravaConnected(d.connected)).catch(() => setStravaConnected(false))
   }, [])
 
+  const validDistances = ['5K', '10K', 'Semi', 'Marathon']
+  const distanceParam = searchParams.get('distance')
   const [data, setData] = useState({
     // Step 0
-    distance: '', customDistance: '', raceName: '', raceDate: '',
+    distance: validDistances.includes(distanceParam) ? distanceParam : '', customDistance: '', raceName: '', raceDate: '',
     // Step 1
     kmPerWeek: '', kmPerWeekCustom: '',
     experience: '', experienceCustom: '',

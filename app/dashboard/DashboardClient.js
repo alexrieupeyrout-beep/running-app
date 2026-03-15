@@ -126,29 +126,42 @@ function getActivity(seance, mockOverride = null) {
 // ── Shared style tokens ──────────────────────────────────────
 const DISTANCE_ICONS = {
   '5K': (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="10" stroke="#02A257" strokeWidth="2.5"/>
-      <circle cx="16" cy="16" r="4" fill="#02A257"/>
-    </svg>
+    <div style={{ width: 40, height: 40, borderRadius: '12px', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        {/* Éclair — vitesse */}
+        <path d="M13 2L4.5 13.5H11L10 22L19.5 10H13L13 2Z" fill="#86efac" stroke="#4ade80" strokeWidth="1.5" strokeLinejoin="round"/>
+      </svg>
+    </div>
   ),
   '10K': (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="11" stroke="#02A257" strokeWidth="2.5"/>
-      <circle cx="16" cy="16" r="6" stroke="#02A257" strokeWidth="2"/>
-    </svg>
+    <div style={{ width: 40, height: 40, borderRadius: '12px', background: '#bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        {/* Piste ovale */}
+        <ellipse cx="12" cy="12" rx="9" ry="6" stroke="#16a34a" strokeWidth="2"/>
+        <ellipse cx="12" cy="12" rx="5" ry="2.5" stroke="#16a34a" strokeWidth="1.5"/>
+        <circle cx="12" cy="6" r="1.5" fill="#16a34a"/>
+      </svg>
+    </div>
   ),
   'Semi': (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <ellipse cx="16" cy="16" rx="13" ry="8" stroke="#02A257" strokeWidth="2.5"/>
-      <ellipse cx="16" cy="16" rx="6" ry="3.5" fill="#02A257"/>
-    </svg>
+    <div style={{ width: 40, height: 40, borderRadius: '12px', background: '#86efac', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        {/* Demi-cercle avec flèche */}
+        <path d="M3 12 A9 9 0 0 1 21 12" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M17.5 8.5 L21 12 L17.5 15.5" stroke="#15803d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="12" cy="12" r="2" fill="#15803d"/>
+      </svg>
+    </div>
   ),
   'Marathon': (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <ellipse cx="16" cy="16" rx="13" ry="8" stroke="#02A257" strokeWidth="2.5"/>
-      <ellipse cx="16" cy="16" rx="8" ry="4.5" stroke="#02A257" strokeWidth="2"/>
-      <ellipse cx="16" cy="16" rx="3" ry="1.5" fill="#02A257"/>
-    </svg>
+    <div style={{ width: 40, height: 40, borderRadius: '12px', background: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        {/* Médaille / étoile */}
+        <circle cx="12" cy="9" r="5" stroke="#166534" strokeWidth="2"/>
+        <path d="M12 4 L13.2 7.4 L16.8 7.4 L14 9.6 L15.1 13 L12 11 L8.9 13 L10 9.6 L7.2 7.4 L10.8 7.4 Z" fill="#166534"/>
+        <path d="M9 14 L8 20 L12 18 L16 20 L15 14" stroke="#166534" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
   ),
 }
 
@@ -492,6 +505,7 @@ const formatAllure = (allure) => {
 
 export default function DashboardClient({ courses, plans, stravaConnected }) {
   const router = useRouter()
+  const isMobile = useWindowWidth() < 640
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'plan' ? 'plan' : 'dashboard')
   const [selectedPlanIdx, setSelectedPlanIdx] = useState(0)
@@ -1038,20 +1052,20 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
               </div>
               <PlanSection plan={plans[selectedPlanIdx]} onAbandon={setConfirmAbandon} />
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '0.75rem' }}>
                 {SUGGESTED_PLANS.map(p => (
                   <Link key={p.distance} href={`/onboarding?distance=${p.distance}`}
-                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', opacity: 0.75 }}
+                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                         {DISTANCE_ICONS[p.distance]}
                         <div>
                           <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.label}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#b0b3c1' }}>{p.semaines} · {p.volume}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#656779', fontWeight: '500' }}>{p.semaines} · {p.volume}</div>
                         </div>
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: '#b0b3c1', flexShrink: 0 }}>→</span>
+                      <span style={{ fontSize: '0.85rem', color: '#02A257', fontWeight: '700', flexShrink: 0 }}>→</span>
                     </div>
                   </Link>
                 ))}
@@ -1069,20 +1083,20 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                 </Link>
               </div>
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '0.75rem' }}>
                 {SUGGESTED_PLANS.map(p => (
                   <Link key={p.distance} href={`/onboarding?distance=${p.distance}`}
-                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', opacity: 0.75 }}
+                    style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                         {DISTANCE_ICONS[p.distance]}
                         <div>
                           <div style={{ fontSize: '1rem', fontWeight: '800', color: '#282830' }}>{p.label}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#b0b3c1' }}>{p.semaines} · {p.volume}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#656779', fontWeight: '500' }}>{p.semaines} · {p.volume}</div>
                         </div>
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: '#b0b3c1', flexShrink: 0 }}>→</span>
+                      <span style={{ fontSize: '0.85rem', color: '#02A257', fontWeight: '700', flexShrink: 0 }}>→</span>
                     </div>
                   </Link>
                 ))}
