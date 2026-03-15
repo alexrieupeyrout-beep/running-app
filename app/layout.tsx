@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "VITE — Analysez chaque kilomètre",
   description: "Synchronisez vos courses Strava et analysez votre progression running.",
   icons: {
-    apple: '/icon.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 
