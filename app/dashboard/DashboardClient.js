@@ -1501,15 +1501,21 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                   </button>
                 ))}
                 <div style={{ flex: 1 }} />
-                <Link href="/onboarding" style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', textDecoration: 'none' }}>
-                  + Nouveau plan
-                </Link>
+                {isGuest ? (
+                  <button onClick={() => setGuestNudge(true)} style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', cursor: 'pointer' }}>
+                    + Nouveau plan
+                  </button>
+                ) : (
+                  <Link href="/onboarding" style={{ padding: '0.4rem 0.9rem', borderRadius: '10px', border: '1.5px solid #c5e6d5', background: 'white', color: '#02A257', fontWeight: '600', fontSize: '0.82rem', textDecoration: 'none' }}>
+                    + Nouveau plan
+                  </Link>
+                )}
               </div>
               <PlanSection plan={plans[selectedPlanIdx]} onAbandon={setConfirmAbandon} />
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '0.75rem' }}>
                 {SUGGESTED_PLANS.map(p => (
-                  <Link key={p.distance} href={`/onboarding?distance=${p.distance}`}
+                  <Link key={p.distance} href={isGuest ? '#' : `/onboarding?distance=${p.distance}`} onClick={isGuest ? (e) => { e.preventDefault(); setGuestNudge(true) } : undefined}
                     style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
@@ -1549,9 +1555,15 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
                       </span>
                     ))}
                   </div>
-                  <Link href="/onboarding" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: '#02A257', color: 'white', padding: '0.6rem 1.1rem', borderRadius: '10px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700' }}>
-                    Créer mon plan →
-                  </Link>
+                  {isGuest ? (
+                    <button onClick={() => setGuestNudge(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: '#02A257', color: 'white', padding: '0.6rem 1.1rem', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '700' }}>
+                      Créer mon plan →
+                    </button>
+                  ) : (
+                    <Link href="/onboarding" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: '#02A257', color: 'white', padding: '0.6rem 1.1rem', borderRadius: '10px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700' }}>
+                      Créer mon plan →
+                    </Link>
+                  )}
                 </div>
 
                 {/* Mini mockups */}
@@ -1594,7 +1606,7 @@ export default function DashboardClient({ courses, plans, stravaConnected }) {
               <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#b0b3c1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plans suggérés</div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '0.75rem' }}>
                 {SUGGESTED_PLANS.map(p => (
-                  <Link key={p.distance} href={`/onboarding?distance=${p.distance}`}
+                  <Link key={p.distance} href={isGuest ? '#' : `/onboarding?distance=${p.distance}`} onClick={isGuest ? (e) => { e.preventDefault(); setGuestNudge(true) } : undefined}
                     style={{ ...T.card, padding: '1rem', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
